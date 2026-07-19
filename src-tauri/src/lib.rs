@@ -34,7 +34,7 @@ pub async fn run() {
 		co_settings = co_settings.with_path(&path);
 	}
 
-	tauri::Builder::default()
+	let builder = tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.plugin(tauri_plugin_co_sdk::init(co_settings).await)
 		.setup(|app| {
@@ -55,7 +55,40 @@ pub async fn run() {
 			}
 
 			Ok(())
-		})
-		.run(tauri::generate_context!())
-		.expect("error while running tauri application");
+		});
+
+	// macOS: Cmd+W / red traffic light should hide the window (app stays in the
+	// Dock), matching typical single-window Mac apps. Cmd+Q still quits.
+	#[cfg(target_os = "macos")]
+	let builder = builder.on_window_event(|window, event| {
+		if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+			let _ = window.hide();
+			api.prevent_close();
+		}
+	});
+
+	builder
+		.build(tauri::generate_context!())
+		.expect("error while building tauri application")
+		.run(|app, event| {
+			#[cfg(target_os = "macos")]
+			if let tauri::RunEvent::Reopen {
+				has_visible_windows,
+				..
+			} = event
+			{
+				if !has_visible_windows {
+					use tauri::Manager;
+					if let Some(window) = app.get_webview_window("main") {
+						let _ = window.show();
+						let _ = window.set_focus();
+					}
+				}
+			}
+
+			#[cfg(not(target_os = "macos"))]
+			{
+				let _ = (app, event);
+			}
+		});
 }
