@@ -39,7 +39,7 @@ export {
 export {
   useCoSession,
   useCo,
-  useCoCore,
+  useCoreTipCid,
   useResolveCid,
   useDidKeyIdentity,
 } from "./hooks";

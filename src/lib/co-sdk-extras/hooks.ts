@@ -91,13 +91,15 @@ export function useCo(co: string): [CID | undefined, CID[] | undefined] {
  * Resolve the tip CID of a named core inside a CO document.
  * Re-runs when `coCid` or `coHeads` change (drive those from {@link useCo}).
  *
+ * Clearer local name for the upstream SDK’s `useCoCore`.
+ *
  * @param coCid - Tip CID of the parent CO document; `undefined` while still loading
  * @param coreId - Core name inside the CO (e.g. `"membership"`, `"room"`)
  * @param session - Open session id; `undefined` while still loading
  * @param coHeads - Optional heads used as a refresh key when the tip changes
  * @returns Core tip CID; `undefined` while loading; `null` when the core is absent
  */
-export function useCoCore(
+export function useCoreTipCid(
   coCid: CID | undefined,
   coreId: string,
   session: string | undefined,

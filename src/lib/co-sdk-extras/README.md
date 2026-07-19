@@ -18,7 +18,7 @@ What this folder adds on top of the npm package (candidates to upstream):
 
 - Shared session cache (`getSharedCoSession`) — avoids open/close churn across panes
 - Error formatting (`formatCoError` with `type`, Tauri runtime checks)
-- Stale-while-revalidate React hooks (`useCoSession` with errors, `useCoCore` refresh via heads, …)
+- Stale-while-revalidate React hooks (`useCoSession` with errors, `useCoreTipCid` refresh via heads, …)
 - Thin wrappers (`listenCoSdkState`, invoke guards with one-time Tauri assert)
 
 The public surface is the explicit named exports in `index.ts`. Every exported

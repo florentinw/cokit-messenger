@@ -20,7 +20,7 @@ import {
   formatCoError,
   isTauriRuntimeAvailable,
   useCo,
-  useCoCore,
+  useCoreTipCid,
   useCoSession,
   useDidKeyIdentity,
   useResolveCid,
@@ -47,7 +47,7 @@ export function AppShell() {
   const { sessionId: localSession, error: sessionError } = useCoSession("local");
   const { identity, error: identityError } = useDidKeyIdentity(IDENTITY_NAME, localSession);
   const [localCoCid, localHeads] = useCo("local");
-  const membershipCoreCid = useCoCore(
+  const membershipCoreCid = useCoreTipCid(
     localCoCid,
     CO_CORE_NAME_MEMBERSHIP,
     localSession,
