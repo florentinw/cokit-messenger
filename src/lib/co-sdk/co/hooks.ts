@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { CID } from "multiformats";
-import { getCoTip, resolveCid } from "@/lib/co-sdk/co/invoke";
-import { listenCoState } from "@/lib/co-sdk/co/state-listener";
-import { getSharedCoSession } from "@/lib/co-sdk/co/session-cache";
+import { getCoTip, resolveCid } from "./invoke";
+import { listenCoState } from "./state-listener";
+import { getSharedCoSession } from "./session-cache";
 
 function headsKey(heads: CID[] | undefined): string {
   return heads?.map((h) => h.toString()).join("\0") ?? "";

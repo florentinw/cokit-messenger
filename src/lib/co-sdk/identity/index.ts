@@ -6,6 +6,6 @@ export {
   LocalMembershipState,
   type LocalMembershipAction,
   type KeystoreKey,
-} from "@/lib/co-sdk/identity/types";
-export { createIdentity } from "@/lib/co-sdk/identity/create-identity";
-export { useIdentity } from "@/lib/co-sdk/identity/hooks";
+} from "./types";
+export { createIdentity } from "./create-identity";
+export { useIdentity } from "./hooks";
