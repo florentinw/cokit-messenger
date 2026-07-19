@@ -25,9 +25,8 @@ CoMembers         → people on a CO (messenger helpers; COKIT wire still uses P
 | Path | Role |
 |------|------|
 | `identity/` | `createIdentity`, `useIdentity`, `LocalMembership*` aliases, `KeystoreKey` |
-| `co/` | session cache, `useCoTip` / `useCo`, `listenCoState`, `resolveCid`, `createCo` |
+| `co/` | session cache, `useCoTip` / `useCo`, `listenCoState`, `resolveCid`, `createCo`, `formatCoError` |
 | `core/` | `pushAction` / `getActions`, `useCoreTip` / `useCore`, `DagList` |
-| `errors/` | `formatCoError`, `CoErrorType` |
 
 ### Upstream gap candidates
 

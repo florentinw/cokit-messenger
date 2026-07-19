@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CID } from "multiformats";
-import { CoOperationError, formatCoError } from "../errors";
+import { CoOperationError, formatCoError } from "../co/errors";
 import { DagList } from "../core/dag-list";
 import { getCoTip, resolveCid } from "../co/invoke";
 import { useCoTip } from "../co/hooks";

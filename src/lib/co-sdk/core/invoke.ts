@@ -4,7 +4,7 @@ import {
   type GetActionsResponse,
 } from "@1io/tauri-plugin-co-sdk";
 import type { CID } from "multiformats";
-import { CoOperationError, formatCoError } from "../errors";
+import { CoOperationError, formatCoError } from "../co/errors";
 import { assertTauriRuntime } from "../co/runtime";
 
 /**
