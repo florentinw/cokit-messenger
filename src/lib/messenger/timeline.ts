@@ -3,6 +3,7 @@ import {
   type ReducerAction,
   reducerActionFrom,
 } from "../co-sdk-extras";
+import { displayName } from "./format";
 import type { MatrixEvent, RoomSystemEvent } from "./types";
 
 export type ChatMessageItem = {
@@ -348,5 +349,115 @@ export function lastActivityTimestamp(
     if (items[i].timestamp > latest) latest = items[i].timestamp;
   }
   return latest;
+}
+
+export type SystemEventTextPart = {
+  text: string;
+  emphasis?: boolean;
+};
+
+/** Plain / rich copy for system timeline events (sidebar preview + chat bubbles). */
+export function systemEventTextParts(
+  event: SystemTimelineEvent,
+  selfDid?: string,
+): SystemEventTextPart[] {
+  const actorName = displayName(event.actorDid, selfDid);
+
+  switch (event.variant) {
+    case "group_created": {
+      const members = event.members.map((did) => displayName(did, selfDid));
+      if (members.length === 0) {
+        return [
+          { text: actorName, emphasis: true },
+          { text: " created this group" },
+        ];
+      }
+      if (members.length === 1) {
+        return [
+          { text: actorName, emphasis: true },
+          { text: " created this group with " },
+          { text: members[0], emphasis: true },
+        ];
+      }
+      const last = members[members.length - 1];
+      const rest = members.slice(0, -1);
+      const parts: SystemEventTextPart[] = [
+        { text: actorName, emphasis: true },
+        { text: " created this group with " },
+      ];
+      for (const [index, member] of rest.entries()) {
+        parts.push({ text: member, emphasis: true });
+        parts.push({ text: index === rest.length - 1 ? " & " : ", " });
+      }
+      parts.push({ text: last, emphasis: true });
+      return parts;
+    }
+    case "member_added":
+      if (event.actorDid === event.member) {
+        return [
+          { text: displayName(event.member, selfDid), emphasis: true },
+          { text: " joined the group" },
+        ];
+      }
+      return [
+        { text: actorName, emphasis: true },
+        { text: " added " },
+        { text: displayName(event.member, selfDid), emphasis: true },
+        { text: " to the group" },
+      ];
+    case "member_removed":
+      if (event.actorDid === event.member) {
+        return [
+          { text: displayName(event.member, selfDid), emphasis: true },
+          { text: " left the group" },
+        ];
+      }
+      return [
+        { text: actorName, emphasis: true },
+        { text: " removed " },
+        { text: displayName(event.member, selfDid), emphasis: true },
+        { text: " from the group" },
+      ];
+    case "group_icon_changed":
+      return [
+        { text: actorName, emphasis: true },
+        { text: " changed the group icon" },
+      ];
+    case "group_name_changed":
+      return [
+        { text: actorName, emphasis: true },
+        { text: " changed the group name" },
+      ];
+    default: {
+      const _exhaustive: never = event;
+      return _exhaustive;
+    }
+  }
+}
+
+export function formatSystemEventText(
+  event: SystemTimelineEvent,
+  selfDid?: string,
+): string {
+  return systemEventTextParts(event, selfDid)
+    .map((part) => part.text)
+    .join("");
+}
+
+/** Sidebar subtitle from the latest message or system event. */
+export function previewFromActions(
+  actions: Array<ReducerAction<MatrixEvent> | MatrixEvent | unknown>,
+  identity?: string,
+): string | undefined {
+  const items = extractTimelineItems(actions);
+  if (items.length === 0) return undefined;
+  const last = items[items.length - 1];
+  if (last.kind === "message") {
+    const previewLine = last.body.split("\n")[0] ?? last.body;
+    return last.from && last.from !== identity
+      ? `${displayName(last.from, identity)}: ${previewLine}`
+      : previewLine;
+  }
+  return formatSystemEventText(last, identity);
 }
 

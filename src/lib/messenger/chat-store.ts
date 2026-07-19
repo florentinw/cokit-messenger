@@ -11,12 +11,12 @@ import {
 import type { GroupAvatarColor } from "./group-avatar";
 import {
   avatarColorFromCoTags,
-  displayName,
   extractTextMessages,
   extractTimelineItems,
   ingestDisplayNamesFromTags,
   lastActivityTimestamp,
   nameFromCoTags,
+  previewFromActions,
   type ChatTimelineItem,
 } from "./operations";
 import { countUnreadMessages, getLastReadAt, markChatRead } from "./unread";
@@ -296,8 +296,8 @@ export async function refreshChatFromCo(
     if (!chatStore.isFetchCurrent(coId, gen)) return;
 
     const messages = extractTextMessages(resolvedActions);
-    const last = messages.length > 0 ? messages[messages.length - 1] : undefined;
-    const activityAt = lastActivityTimestamp(resolvedActions) ?? last?.timestamp;
+    const activityAt = lastActivityTimestamp(resolvedActions);
+    const preview = previewFromActions(resolvedActions, identity);
 
     let lastRead = getLastReadAt(coId);
     if (opts?.selected) {
@@ -312,15 +312,6 @@ export async function refreshChatFromCo(
     const unread = opts?.selected
       ? 0
       : countUnreadMessages(messages, identity, lastRead);
-
-    let preview: string | undefined;
-    if (last) {
-      const previewLine = last.body.split("\n")[0] ?? last.body;
-      preview =
-        last.from && last.from !== identity
-          ? `${displayName(last.from, identity)}: ${previewLine}`
-          : previewLine;
-    }
 
     chatStore.applyRemote(
       coId,
