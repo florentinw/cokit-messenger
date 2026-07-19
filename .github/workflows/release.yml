@@ -1,20 +1,10 @@
 name: Release
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'src-tauri/**'
-      - 'public/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'index.html'
-      - 'vite.config.*'
-      - 'tsconfig*.json'
-      - '.npmrc'
-      - '.github/workflows/release.yml'
+  schedule:
+    # Once per night (02:00 UTC).
+    - cron: '0 2 * * *'
+  workflow_dispatch:
 
 concurrency:
   group: release-main
@@ -29,14 +19,62 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.bump.outputs.version }}
+      should_release: ${{ steps.changes.outputs.should_release }}
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
+          ref: main
+
+      - name: Check for releasable changes since last tag
+        id: changes
+        run: |
+          set -euo pipefail
+          LATEST="$(git tag -l 'v*' --sort=-v:refname | head -n1 || true)"
+          if [ -z "$LATEST" ]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "No existing v* tag; will create the first release."
+            exit 0
+          fi
+
+          # Same paths that previously gated push-triggered releases.
+          if git diff --quiet "${LATEST}..HEAD" -- \
+            src \
+            src-tauri \
+            public \
+            scripts \
+            package.json \
+            pnpm-lock.yaml \
+            index.html \
+            'vite.config.*' \
+            'tsconfig*.json' \
+            .npmrc \
+            .github/workflows/release.yml
+          then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "No releasable changes since ${LATEST}; skipping."
+          else
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "Releasable changes found since ${LATEST}."
+            git log --oneline "${LATEST}..HEAD" -- \
+              src \
+              src-tauri \
+              public \
+              scripts \
+              package.json \
+              pnpm-lock.yaml \
+              index.html \
+              'vite.config.*' \
+              'tsconfig*.json' \
+              .npmrc \
+              .github/workflows/release.yml \
+              | head -n 20
+          fi
 
       - name: Compute next patch version
         id: bump
+        if: steps.changes.outputs.should_release == 'true'
         run: |
           set -euo pipefail
           LATEST="$(git tag -l 'v*' --sort=-v:refname | head -n1 || true)"
@@ -55,9 +93,12 @@ jobs:
   publish:
     name: Publish (Apple Silicon)
     needs: version
+    if: needs.version.outputs.should_release == 'true'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: main
 
       - uses: pnpm/action-setup@v5
         with:
@@ -110,7 +151,7 @@ jobs:
           tagName: v${{ needs.version.outputs.version }}
           releaseName: CO Messenger v${{ needs.version.outputs.version }}
           releaseBody: |
-            Automated macOS (Apple Silicon) build from `main` (ad-hoc signed, **not** notarized).
+            Nightly macOS (Apple Silicon) build from `main` (ad-hoc signed, **not** notarized).
 
             ### Install
             1. Download the `.dmg` and open it.
