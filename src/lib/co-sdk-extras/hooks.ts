@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CID } from "multiformats";
-import { DagList } from "./dag-list";
+import { asDagNode, DagList } from "./dag-list";
 import { CoOperationError, formatCoError } from "./errors";
 import {
   createIdentity,
@@ -197,7 +197,7 @@ async function findNamedKeystoreDid(
   if (keyStoreKeys?.a === undefined) return undefined;
 
   const dagList = new DagList<[string, { v?: KeystoreKey }]>(
-    keyStoreKeys.a,
+    asDagNode(keyStoreKeys.a),
     sessionId,
   );
   const existing = await dagList.find((item) => item[1].v?.name === name);

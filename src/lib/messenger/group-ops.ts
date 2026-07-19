@@ -12,7 +12,7 @@ import {
   sessionOpen,
   type Did,
   type MembershipsAction,
-} from "../co-sdk";
+} from "../co-sdk-extras";
 import { type GroupAvatarColor } from "./group-avatar";
 import { readProfileName } from "./profile";
 import {

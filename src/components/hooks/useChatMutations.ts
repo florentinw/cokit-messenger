@@ -18,7 +18,7 @@ import {
   invalidateSharedCoSession,
   MembershipState,
   type Membership,
-} from "../../lib/co-sdk";
+} from "../../lib/co-sdk-extras";
 import type { Pane } from "../pane";
 
 type Nav = {
@@ -82,7 +82,15 @@ export function useChatMutations({
         const now = Date.now();
         setMemberships((prev) => {
           if (prev.some((m) => m.id === coId)) return prev;
-          return [...prev, { id: coId, did: { [identity]: MembershipState.Active } }];
+          return [
+            ...prev,
+            {
+              id: coId,
+              did: { [identity]: MembershipState.Active },
+              state: [],
+              tags: [],
+            },
+          ];
         });
         markChatRead(coId, now);
         chatStore.applyLocal(coId, {

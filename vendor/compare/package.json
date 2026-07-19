@@ -1,0 +1,16 @@
+{
+  "name": "@1io/compare",
+  "version": "0.2.0",
+  "description": "Minimal local stub — @1io/compare is not published to the public npm registry (intranet-only).",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

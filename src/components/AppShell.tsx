@@ -25,7 +25,7 @@ import {
   useDidKeyIdentity,
   useResolveCid,
   type Memberships,
-} from "../lib/co-sdk";
+} from "../lib/co-sdk-extras";
 import { ChatPane } from "./chat/ChatPane";
 import { ChatSidebar, type ChatListRow } from "./sidebar/ChatSidebar";
 import { GroupDetails } from "./chat-details/GroupDetails";

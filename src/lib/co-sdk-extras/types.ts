@@ -1,37 +1,24 @@
-import type { CID } from "multiformats";
+/**
+ * Domain types from the published guest SDK, plus messenger wire helpers.
+ */
+export {
+  CO_CORE_NAME_MEMBERSHIP,
+  MembershipState,
+  ParticipantState,
+  type CoId,
+  type Did,
+  type GetActionsResponse,
+  type Membership,
+  type MembershipOptions,
+  type Memberships,
+  type MembershipsAction,
+  type Participant,
+  type Tags,
+} from "@1io/tauri-plugin-co-sdk";
 
-export type CoId = string;
-export type Did = string;
-
-export enum MembershipState {
-  Active = 10,
-  Pending = 15,
-  Join = 20,
-  Invite = 30,
-  Inactive = 40,
-}
-
-export interface Membership {
-  id: CoId;
-  did: Record<Did, MembershipState>;
-  state?: unknown;
-  key?: string;
-  tags?: unknown;
-}
-
-export interface Memberships {
-  memberships: Membership[];
-}
-
-export type MembershipsAction =
-  | { Join: { id: CoId; did: Did } }
-  | { InviteAccept: { id: CoId; did: Did } }
-  | { Invited: { id: CoId; did: Did } }
-  | { Deactivate: { id: CoId; did: Did } }
-  | { Remove: { id: CoId; did?: Did } };
+export type { CoSdkStateEvent } from "@1io/tauri-plugin-co-sdk";
 
 export const CO_CORE_NAME_CO = "co";
-export const CO_CORE_NAME_MEMBERSHIP = "membership";
 
 /**
  * COKIT stores reducer actions with short CBOR keys (`f`/`t`/`c`/`p`).
@@ -39,8 +26,8 @@ export const CO_CORE_NAME_MEMBERSHIP = "membership";
  */
 export interface ReducerAction<T> {
   /** Sender DID — wire key `f`. */
-  f?: Did;
-  from?: Did;
+  f?: string;
+  from?: string;
   /** Dispatch time — wire key `t`. */
   t?: number;
   time?: number;
@@ -53,7 +40,7 @@ export interface ReducerAction<T> {
 }
 
 export function reducerActionFrom<T>(action: ReducerAction<T> | unknown): {
-  from: Did;
+  from: string;
   time: number | undefined;
   core: string | undefined;
   payload: T | undefined;
@@ -66,13 +53,6 @@ export function reducerActionFrom<T>(action: ReducerAction<T> | unknown): {
     payload: raw.p ?? raw.payload,
   };
 }
-
-export interface GetActionsResponse {
-  actions: CID[];
-  next_heads: CID[];
-}
-
-export type CoSdkStateEvent = [string, CID | undefined, CID[]];
 
 export interface KeystoreKey {
   name: string;

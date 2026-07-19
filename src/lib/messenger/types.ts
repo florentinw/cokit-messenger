@@ -1,4 +1,6 @@
-/** Messenger / room-core domain types (not part of the generic COKIT guest SDK). */
+/** Messenger / room-core domain types. */
+
+import type { Room } from "@1io/tauri-plugin-co-sdk";
 
 export const CO_CORE_NAME_ROOM = "room";
 
@@ -26,14 +28,17 @@ export function displayNameTagKey(did: string): string {
 
 export const IDENTITY_NAME = "messenger-identity";
 
+/** Built-in `co-core-room` CID (from `@1io/tauri-plugin-co-sdk` Cores enum). */
 export const ROOM_CORE_CID = "QmXzU5G6K8japFjL1uNiqfTCb96mNrDEKcPsGpapQNQKXF";
 
-export interface RoomState {
-  name: string;
-  description: string;
-  avatar?: { "/": string } | null;
-  pinned_messages: string[];
-}
+/**
+ * Room core state — matches the published `Room` schema from co-messaging.
+ * (`tags` is present on the wire but unused in the UI today.)
+ */
+export type RoomState = Pick<
+  Room.Room,
+  "name" | "description" | "avatar" | "pinned_messages"
+>;
 
 export type TextMessageContent = {
   msgtype: "text";

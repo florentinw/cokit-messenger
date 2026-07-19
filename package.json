@@ -20,16 +20,20 @@
     "clear:data": "rm -rf tmp/data tmp/data-b tmp/data-c && echo \"Cleared local CO data (tmp/data*). Restart with pnpm tauri:dev.\""
   },
   "dependencies": {
+    "@1io/co-js": "^0.1.0",
+    "@1io/compare": "file:vendor/compare",
+    "@1io/tauri-plugin-co-sdk": "^0.1.0",
     "@fontsource/inter": "^5.2.8",
     "@ipld/dag-cbor": "^10.0.1",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "clsx": "^2.1.1",
-    "multiformats": "^14.0.4",
+    "multiformats": "^13.3.1",
     "react": "^19.1.0",
     "react-aria-components": "^1.19.0",
     "react-dom": "^19.1.0",
     "react-error-boundary": "^6.1.2",
+    "rxjs": "^7.8.2",
     "tailwind-merge": "^3.6.0",
     "uuid": "^14.0.1",
     "web-streams-polyfill": "^4.3.0"
@@ -46,5 +50,10 @@
     "vite": "^7.0.4",
     "vite-plugin-svgr": "^5.2.0",
     "vite-plugin-wasm": "^3.6.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@1io/compare": "file:vendor/compare"
+    }
   }
 }

@@ -8,7 +8,7 @@ import {
   refreshChatFromCo,
   refreshChatsFromCo,
 } from "../../lib/messenger";
-import { MembershipState, listenCoSdkState, type Membership } from "../../lib/co-sdk";
+import { MembershipState, listenCoSdkState, type Membership } from "../../lib/co-sdk-extras";
 
 /** Hydrate ChatStore for sidebar memberships (invites + active chats). */
 export function useChatHydration(

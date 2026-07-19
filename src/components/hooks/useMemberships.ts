@@ -4,7 +4,7 @@ import {
   isSidebarMembership,
   membershipStateFor,
 } from "../../lib/messenger";
-import { MembershipState, type Membership, type Memberships } from "../../lib/co-sdk";
+import { MembershipState, type Membership, type Memberships } from "../../lib/co-sdk-extras";
 
 /** Load and stabilize the local membership list for the sidebar. */
 export function useMemberships(
