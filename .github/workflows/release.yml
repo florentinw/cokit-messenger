@@ -99,6 +99,10 @@ jobs:
             1. Download the `.dmg` and open it.
             2. Drag **CO Messenger** to Applications.
             3. If Gatekeeper blocks it: **right-click → Open** → confirm **Open**.
+            4. If that doesn’t show an **Open** option:
+               - Open **System Settings → Privacy & Security**.
+               - Scroll to the message about CO Messenger being blocked.
+               - Click **Open Anyway**, then confirm.
 
             Network and Keychain are enabled by default in this build.
           releaseDraft: false
