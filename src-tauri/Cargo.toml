@@ -1,0 +1,25 @@
+[package]
+name = "cokit-messenger"
+version = "0.1.0"
+description = "COKIT messenger (Tauri)"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "cokit_messenger_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = [] }
+tauri-plugin-co-sdk = { git = "https://github.com/1iolabs/cokit.git", branch = "main", version = "0.1.0" }
+tauri-plugin-opener = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+# COKIT pulls `core2 = ^0.4.0` via multihash-codetable; 0.4.0 is yanked on crates.io.
+[patch.crates-io]
+core2 = { path = "../vendor/core2-0.4.0" }

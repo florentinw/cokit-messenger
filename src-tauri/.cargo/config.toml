@@ -1,0 +1,3 @@
+[build]
+# Keep build artifacts in-tree so restarts don't use a sandbox cache path.
+target-dir = "target"

@@ -1,0 +1,42 @@
+{
+  "name": "cokit-messenger",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.7.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:ui": "vite --mode mock",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "mkdir -p tmp/data && CO_NO_KEYCHAIN=true CO_BASE_PATH=\"$PWD/tmp/data\" pnpm tauri dev",
+    "tauri:dev:b": "mkdir -p tmp/data-b && CO_NO_KEYCHAIN=true CO_ENABLE_NETWORK=true CO_BASE_PATH=\"$PWD/tmp/data-b\" pnpm tauri dev",
+    "tauri:dev:net": "mkdir -p tmp/data && CO_NO_KEYCHAIN=true CO_ENABLE_NETWORK=true CO_BASE_PATH=\"$PWD/tmp/data\" pnpm tauri dev"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@ipld/dag-cbor": "^10.0.1",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "multiformats": "^14.0.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-error-boundary": "^6.1.2",
+    "uuid": "^14.0.1",
+    "web-streams-polyfill": "^4.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/uuid": "^11.0.0",
+    "@vitejs/plugin-react": "^4.6.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4",
+    "vite-plugin-svgr": "^5.2.0",
+    "vite-plugin-wasm": "^3.6.0"
+  }
+}
