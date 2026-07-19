@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { CID } from "multiformats";
 import {
   CoOperationError,
-  formatCoError,
   getCoTip,
   resolveCid,
   useCoTip,
@@ -53,9 +52,9 @@ async function findNamedKeystoreDid(
 export function useIdentity(
   name: string,
   sessionId: string | undefined,
-): { identity?: string; error?: Error } {
+): { identity?: string; error?: CoOperationError } {
   const [identity, setIdentity] = useState<string | undefined>();
-  const [identityError, setIdentityError] = useState<Error | undefined>();
+  const [identityError, setIdentityError] = useState<CoOperationError | undefined>();
   const identityRef = useRef<string | undefined>(undefined);
   identityRef.current = identity;
   const [localTipCid] = useCoTip("local");
@@ -90,7 +89,7 @@ export function useIdentity(
         console.error("Failed to load identity", err);
         if (cancelled) return;
         if (identityRef.current !== undefined) return;
-        setIdentityError(new CoOperationError(formatCoError(err)));
+        setIdentityError(CoOperationError.from(err));
       }
     }
 

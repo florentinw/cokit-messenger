@@ -4,11 +4,7 @@ import {
   type GetActionsResponse,
 } from "@1io/tauri-plugin-co-sdk";
 import type { CID } from "multiformats";
-import {
-  assertTauriRuntime,
-  CoOperationError,
-  formatCoError,
-} from "@/lib/co-sdk/co";
+import { assertTauriRuntime, CoOperationError } from "@/lib/co-sdk/co";
 
 /**
  * Push a reducer action onto a named core.
@@ -30,7 +26,7 @@ export async function pushAction(
   try {
     return await sdkPushAction(session, core, action, identity);
   } catch (err) {
-    throw new CoOperationError(formatCoError(err));
+    throw CoOperationError.from(err);
   }
 }
 

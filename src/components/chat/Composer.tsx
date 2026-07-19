@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
-import { formatCoError } from "@/lib/co-sdk/co";
+import { CoOperationError } from "@/lib/co-sdk/co";
 import { Button } from "@/components/global/Button";
 import { Icon } from "@/components/global/icons/Icon";
 
@@ -24,9 +24,9 @@ export function Composer({ disabled, placeholder = "Message", error, onSend }: P
       await onSend(text);
       setValue("");
     } catch (err) {
-      const formatted = formatCoError(err);
+      const coErr = CoOperationError.from(err);
       console.error("Failed to send message", err);
-      setSendError({ summary: formatted.summary, detail: formatted.detail });
+      setSendError({ summary: coErr.message, detail: coErr.detail });
     } finally {
       setSending(false);
     }

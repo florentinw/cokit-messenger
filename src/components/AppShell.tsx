@@ -19,12 +19,7 @@ import {
   useIdentity,
   type LocalMemberships,
 } from "@/lib/co-sdk/identity";
-import {
-  errorDetail,
-  formatCoError,
-  isTauriRuntimeAvailable,
-  useCoSession,
-} from "@/lib/co-sdk/co";
+import { isTauriRuntimeAvailable, useCoSession } from "@/lib/co-sdk/co";
 import { useCore } from "@/lib/co-sdk/core";
 import { ChatPane } from "@/components/chat/ChatPane";
 import { ChatSidebar, type ChatListRow } from "@/components/sidebar/ChatSidebar";
@@ -216,9 +211,9 @@ export function AppShell() {
     !bootstrappedRef.current && (!localSession || (!identity && !identityError));
 
   if (sessionError || identityError) {
+    const err = sessionError ?? identityError;
     const notInTauri = !isTauriRuntimeAvailable() && sessionError;
-    const formatted = formatCoError(sessionError ?? identityError);
-    const isCorruptStorage = formatted.type === "corrupt_storage";
+    const isCorruptStorage = err?.type === "corrupt_storage";
     const errorTitle = notInTauri
       ? "Open the desktop app"
       : isCorruptStorage
@@ -226,17 +221,15 @@ export function AppShell() {
         : sessionError
           ? "Could not open local session"
           : "Could not load identity";
-    const rawMessage = sessionError
-      ? notInTauri
-        ? TAURI_REQUIRED_MESSAGE
-        : errorDetail(sessionError)
-      : errorDetail(identityError);
+    const rawMessage = notInTauri
+      ? TAURI_REQUIRED_MESSAGE
+      : (err?.detail ?? err?.message ?? "");
     const copyMessage = `${errorTitle}\n\n${rawMessage}${isCorruptStorage ? `\n\n${RESET_LOCAL_DATA_HINT}` : ""}`;
 
     return (
       <ErrorCard
         title={errorTitle}
-        message={formatted.summary}
+        message={err?.message}
         copyText={copyMessage}
         hint={isCorruptStorage ? <CorruptStorageHint /> : undefined}
         details={rawMessage}

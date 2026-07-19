@@ -25,13 +25,13 @@ CoMembers         → people on a CO (messenger helpers; COKIT wire still uses P
 | Path | Role |
 |------|------|
 | `identity/` | `createIdentity`, `useIdentity`, `LocalMembership*` aliases, `KeystoreKey` |
-| `co/` | session cache, `useCoTip` / `useCo`, `listenCoState`, `resolveCid`, `createCo`, `CID`, `formatCoError` |
+| `co/` | session cache, `useCoTip` / `useCo`, `listenCoState`, `resolveCid`, `createCo`, `CID`, `CoOperationError` |
 | `core/` | `pushAction` / `getActions`, `useCoreTip` / `useCore`, `DagList` |
 
 ### Upstream gap candidates
 
 - Shared session cache (`getSharedCoSession`)
-- Error formatting with `type` (`formatCoError`)
+- Typed operation errors (`CoOperationError` with `type` / summary / `detail`)
 - SWR hooks: tip vs decoded data for CO (`useCoTip` / `useCo`) and Core (`useCoreTip` / `useCore`)
 - Clearer names vs SDK (`LocalMembership` vs `Membership`)
 

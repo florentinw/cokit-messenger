@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CID } from "multiformats";
+import { CoOperationError } from "./errors";
 import { getCoTip, resolveCid } from "./invoke";
 import { listenCoState } from "./state-listener";
 import { getSharedCoSession } from "./session-cache";
@@ -17,10 +18,10 @@ function headsKey(heads: CID[] | undefined): string {
  */
 export function useCoSession(coId: string): {
   sessionId: string | undefined;
-  error: Error | undefined;
+  error: CoOperationError | undefined;
 } {
   const [session, setSession] = useState<string | undefined>();
-  const [sessionError, setSessionError] = useState<Error | undefined>();
+  const [sessionError, setSessionError] = useState<CoOperationError | undefined>();
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +34,7 @@ export function useCoSession(coId: string): {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setSessionError(err instanceof Error ? err : new Error(String(err)));
+        setSessionError(CoOperationError.from(err));
       });
 
     return () => {

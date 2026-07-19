@@ -1,87 +1,50 @@
 const CORRUPT_STORAGE_PATTERN =
   /Block not found|Internal storage error|Query Storage failed|Resolve Identit/i;
 
-/**
- * True when an error message indicates local CO block storage is corrupt/incomplete.
- *
- * @param message - Raw error text (message or stack) to scan
- * @returns `true` if the text matches known corrupt-storage patterns
- */
-function isCorruptLocalStorageError(message: string): boolean {
-  return CORRUPT_STORAGE_PATTERN.test(message);
-}
+/** Discriminator for CO/Tauri operation errors. */
+export type CoErrorType = "generic" | "corrupt_storage";
 
-/**
- * Best-effort string for an unknown thrown value (prefers `Error.stack`).
- *
- * @param err - Any thrown value (`Error`, string, or other)
- * @returns Stack or message for `Error`; otherwise `String(err)`
- */
-export function errorDetail(err: unknown): string {
+function detailFromUnknown(err: unknown): string {
   if (err instanceof Error) {
     return err.stack?.trim() || err.message;
   }
   return String(err);
 }
 
-/** Discriminator for normalized CO/Tauri errors. */
-export type CoErrorType = "generic" | "corrupt_storage";
-
-/** Normalized CO/Tauri error for UI banners and clipboard copy. */
-export type FormattedCoError = {
-  /** Error kind — drives UI (e.g. reset-data hint for `corrupt_storage`). */
-  type: CoErrorType;
-  /** Short user-facing line (truncated when long). */
-  summary: string;
-  /** Full technical detail (often a stack). */
-  detail: string;
-};
-
-/** Error subclass that already carries a {@link FormattedCoError} payload. */
+/**
+ * CO/Tauri operation error with UI-facing `type`, summary (`message`), and `detail`.
+ * Use {@link CoOperationError.from} at SDK boundaries for unknown throws.
+ */
 export class CoOperationError extends Error {
-  /** Error kind from {@link FormattedCoError.type}. */
   readonly type: CoErrorType;
-  /** Full technical detail from {@link FormattedCoError.detail}. */
   readonly detail: string;
 
-  /**
-   * @param formatted - Pre-normalized type/summary/detail
-   */
-  constructor(formatted: FormattedCoError) {
-    super(formatted.summary);
+  constructor(type: CoErrorType, summary: string, detail: string) {
+    super(summary);
     this.name = "CoOperationError";
-    this.type = formatted.type;
-    this.detail = formatted.detail;
-  }
-}
-
-/**
- * Turn an unknown throw into a typed summary + full detail for the UI.
- * Classifies local-storage failure patterns as `type: "corrupt_storage"`.
- *
- * @param err - Any thrown value, including an existing {@link CoOperationError}
- * @returns Normalized `{ type, summary, detail }` for banners / copy
- */
-export function formatCoError(err: unknown): FormattedCoError {
-  if (err instanceof CoOperationError) {
-    return {
-      type: err.type,
-      summary: err.message,
-      detail: err.detail,
-    };
+    this.type = type;
+    this.detail = detail;
   }
 
-  const detail = errorDetail(err);
+  /**
+   * Normalize an unknown throw into a {@link CoOperationError}.
+   * Classifies local-storage failure patterns as `type: "corrupt_storage"`.
+   */
+  static from(err: unknown): CoOperationError {
+    if (err instanceof CoOperationError) return err;
 
-  if (isCorruptLocalStorageError(detail)) {
-    return {
-      type: "corrupt_storage",
-      summary: "Local CO data is corrupted or incomplete.",
-      detail,
-    };
+    const detail = detailFromUnknown(err);
+
+    if (CORRUPT_STORAGE_PATTERN.test(detail)) {
+      return new CoOperationError(
+        "corrupt_storage",
+        "Local CO data is corrupted or incomplete.",
+        detail,
+      );
+    }
+
+    const firstLine = detail.split("\n").find((line) => line.trim().length > 0) ?? detail;
+    const summary = firstLine.length > 160 ? `${firstLine.slice(0, 157)}…` : firstLine;
+    return new CoOperationError("generic", summary, detail);
   }
-
-  const firstLine = detail.split("\n").find((line) => line.trim().length > 0) ?? detail;
-  const summary = firstLine.length > 160 ? `${firstLine.slice(0, 157)}…` : firstLine;
-  return { type: "generic", summary, detail };
 }
