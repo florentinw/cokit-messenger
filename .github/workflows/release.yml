@@ -3,6 +3,18 @@ name: Release
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'src-tauri/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'index.html'
+      - 'vite.config.*'
+      - 'tsconfig*.json'
+      - '.npmrc'
+      - '.github/workflows/release.yml'
 
 concurrency:
   group: release-main

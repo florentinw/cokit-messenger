@@ -9,8 +9,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'src-tauri/**'
+              - 'public/**'
+              - 'scripts/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'index.html'
+              - 'vite.config.*'
+              - 'tsconfig*.json'
+              - '.npmrc'
+              - '.github/workflows/**'
+
+  compile:
+    name: Compile
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
@@ -43,3 +70,26 @@ jobs:
       # the Release workflow when merging to main.
       - name: Build (Apple Silicon, debug)
         run: pnpm tauri build --debug
+
+  # Required check name stays "Build" so docs-only PRs are not stuck behind a
+  # skipped macos job.
+  build:
+    name: Build
+    needs: [changes, compile]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gate
+        run: |
+          set -euo pipefail
+          if [[ "${{ needs.changes.outputs.code }}" != "true" ]]; then
+            echo "No code paths changed — skipping compile."
+            exit 0
+          fi
+          case "${{ needs.compile.result }}" in
+            success) exit 0 ;;
+            *)
+              echo "Compile result: ${{ needs.compile.result }}"
+              exit 1
+              ;;
+          esac
