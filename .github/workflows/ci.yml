@@ -27,8 +27,6 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -38,5 +36,7 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      # macos-latest is Apple Silicon — build native (no --target) so the
+      # bundler and cargo agree on target/release/, not a triple subdirectory.
       - name: Build (Apple Silicon)
-        run: pnpm tauri build -- --target aarch64-apple-darwin
+        run: pnpm tauri build

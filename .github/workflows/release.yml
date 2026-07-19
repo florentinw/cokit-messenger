@@ -46,9 +46,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Native ARM on macos-latest — omit --target so binary lands in target/release/
           - platform: macos-latest
             arch: aarch64
-            args: --target aarch64-apple-darwin
+            args: ''
           - platform: macos-latest
             arch: x86_64
             args: --target x86_64-apple-darwin
@@ -69,12 +70,13 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          targets: x86_64-apple-darwin
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: ./src-tauri -> target
+          key: ${{ matrix.arch }}
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
