@@ -63,7 +63,8 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: ./src-tauri -> target
-          shared-key: tauri-macos-release
+          shared-key: tauri-macos
+          cache-on-failure: true
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
