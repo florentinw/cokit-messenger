@@ -5,20 +5,17 @@ import {
   getCoState,
   getSharedCoSession,
   invalidateSharedCoSession,
-  resolveActionsParallel,
   resolveCid,
 } from "../co-sdk-extras";
 import type { GroupAvatarColor } from "./group-avatar";
+import { avatarColorFromCoTags, ingestDisplayNamesFromTags, nameFromCoTags } from "./tags";
 import {
-  avatarColorFromCoTags,
-  extractTextMessages,
   extractTimelineItems,
-  ingestDisplayNamesFromTags,
-  lastActivityTimestamp,
-  nameFromCoTags,
-  previewFromActions,
+  lastActivityFromTimeline,
+  previewFromTimeline,
+  textMessagesFromTimeline,
   type ChatTimelineItem,
-} from "./operations";
+} from "./timeline";
 import { countUnreadMessages, getLastReadAt, markChatRead } from "./unread";
 import type { RoomState } from "./types";
 
@@ -288,16 +285,28 @@ export async function refreshChatFromCo(
     const actionsResponse = await getActions(session, heads, actionCount, undefined);
     if (!chatStore.isFetchCurrent(coId, gen)) return;
 
-    const resolvedActions = await resolveActionsParallel(
-      session,
-      actionsResponse.actions as CID[],
-      { cache: false },
-    );
+    const actionCids = actionsResponse.actions as CID[];
+    const resolvedActions =
+      actionCids.length === 0
+        ? []
+        : (
+            await Promise.all(
+              actionCids.map(async (cid) => {
+                try {
+                  return await resolveCid(session, cid);
+                } catch (err) {
+                  console.error("Failed to resolve action", err);
+                  return undefined;
+                }
+              }),
+            )
+          ).filter((item): item is unknown => item !== undefined);
     if (!chatStore.isFetchCurrent(coId, gen)) return;
 
-    const messages = extractTextMessages(resolvedActions);
-    const activityAt = lastActivityTimestamp(resolvedActions);
-    const preview = previewFromActions(resolvedActions, identity);
+    const timeline = extractTimelineItems(resolvedActions);
+    const messages = textMessagesFromTimeline(timeline);
+    const activityAt = lastActivityFromTimeline(timeline);
+    const preview = previewFromTimeline(timeline, identity);
 
     let lastRead = getLastReadAt(coId);
     if (opts?.selected) {

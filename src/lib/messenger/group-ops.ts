@@ -1,15 +1,12 @@
 import { CID } from "multiformats/cid";
 import { v4 as uuid } from "uuid";
 import {
-  CO_CORE_NAME_CO,
   CO_CORE_NAME_MEMBERSHIP,
   createCo,
   getCoState,
   getSharedCoSession,
   pushAction,
   resolveCid,
-  sessionClose,
-  sessionOpen,
   type Did,
   type MembershipsAction,
 } from "../co-sdk-extras";
@@ -22,6 +19,7 @@ import {
   setCoMemberDisplayName,
 } from "./tags";
 import {
+  CO_CORE_NAME_CO,
   CO_CORE_NAME_ROOM,
   ROOM_CORE_CID,
   type MatrixEvent,
@@ -33,20 +31,16 @@ export async function createGroupChat(
   avatarColor?: GroupAvatarColor,
 ): Promise<string> {
   const coId = await createCo(identity, name, false);
-  const session = await sessionOpen(coId);
-  try {
-    await ensureRoomCore(session, identity);
-    await setRoomName(session, identity, coId, name);
-    await setCoGroupNameTag(session, identity, coId, name);
-    if (avatarColor) {
-      await setCoGroupAvatarColor(session, identity, coId, avatarColor);
-    }
-    const profile = readProfileName();
-    if (profile) {
-      await setCoMemberDisplayName(session, identity, coId, profile);
-    }
-  } finally {
-    await sessionClose(session);
+  const session = await getSharedCoSession(coId);
+  await ensureRoomCore(session, identity);
+  await setRoomName(session, identity, coId, name);
+  await setCoGroupNameTag(session, identity, coId, name);
+  if (avatarColor) {
+    await setCoGroupAvatarColor(session, identity, coId, avatarColor);
+  }
+  const profile = readProfileName();
+  if (profile) {
+    await setCoMemberDisplayName(session, identity, coId, profile);
   }
   return coId;
 }

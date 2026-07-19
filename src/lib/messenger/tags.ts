@@ -1,6 +1,5 @@
 import { CID } from "multiformats/cid";
 import {
-  CO_CORE_NAME_CO,
   getCoState,
   getSharedCoSession,
   pushAction,
@@ -14,6 +13,7 @@ import {
 } from "./group-avatar";
 import { getPeerName, rememberPeerName, rememberPeerNames } from "./peer-names";
 import {
+  CO_CORE_NAME_CO,
   CO_TAG_DISPLAY_NAME_PREFIX,
   CO_TAG_GROUP_AVATAR_COLOR,
   CO_TAG_GROUP_NAME,
@@ -62,8 +62,7 @@ export function avatarColorFromCoTags(tags: unknown): GroupAvatarColor | undefin
   return color;
 }
 
-/** Collect `display_name:<did>` → name pairs from CO / membership tags. */
-export function displayNamesFromCoTags(tags: unknown): Record<string, string> {
+function displayNamesFromCoTags(tags: unknown): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, value] of iterTagEntries(tags)) {
     if (!key.startsWith(CO_TAG_DISPLAY_NAME_PREFIX)) continue;
@@ -174,26 +173,53 @@ function membershipTagBag(membership: Membership): unknown {
   return raw.tags ?? raw.t;
 }
 
-function nameTagEntries(tags: unknown): string[][] {
-  return iterTagEntries(tags).filter(
-    (entry): entry is [string, string] =>
-      entry[0] === CO_TAG_GROUP_NAME && typeof entry[1] === "string",
-  );
-}
-
-function avatarColorTagEntries(tags: unknown): string[][] {
-  return iterTagEntries(tags).filter(
-    (entry): entry is [string, string] =>
-      entry[0] === CO_TAG_GROUP_AVATAR_COLOR && typeof entry[1] === "string",
-  );
-}
-
-function memberDisplayNameTagEntries(tags: unknown, did: string): string[][] {
-  const key = displayNameTagKey(did);
+function stringTagEntries(tags: unknown, key: string): string[][] {
   return iterTagEntries(tags).filter(
     (entry): entry is [string, string] =>
       entry[0] === key && typeof entry[1] === "string",
   );
+}
+
+/**
+ * Replace existing string tags for `key` with `value` on the group CO.
+ * When `skipIfUnchanged` is set, no-ops if a single matching value is already present.
+ */
+async function upsertCoTag(
+  session: string,
+  identity: Did,
+  coId: string,
+  key: string,
+  value: string,
+  options?: { skipIfUnchanged?: boolean },
+): Promise<boolean> {
+  const [stateCid] = await getCoState(coId);
+  if (stateCid) {
+    const co = (await resolveCid(session, stateCid)) as { t?: unknown };
+    const existing = stringTagEntries(co.t, key);
+    if (
+      options?.skipIfUnchanged &&
+      existing.length === 1 &&
+      existing[0][1] === value
+    ) {
+      return false;
+    }
+    if (existing.length > 0) {
+      await pushAction(
+        session,
+        CO_CORE_NAME_CO,
+        { TagsRemove: { tags: existing } },
+        identity,
+      );
+    }
+  }
+
+  await pushAction(
+    session,
+    CO_CORE_NAME_CO,
+    { TagsInsert: { tags: [[key, value]] } },
+    identity,
+  );
+  return true;
 }
 
 export type InviteDisplayMeta = {
@@ -202,7 +228,7 @@ export type InviteDisplayMeta = {
 };
 
 /**
- * Pending invites cannot `sessionOpen` the group CO yet.
+ * Pending invites cannot open the group CO yet.
  * Stock COKIT only keeps `co-invite-metadata` on the membership (not group
  * name/color tags), so we resolve the inviter DID from that metadata only.
  */
@@ -234,27 +260,7 @@ export async function setCoGroupNameTag(
 ): Promise<void> {
   const trimmed = name.trim();
   if (!trimmed) return;
-
-  const [stateCid] = await getCoState(coId);
-  if (stateCid) {
-    const co = (await resolveCid(session, stateCid)) as { t?: unknown };
-    const existing = nameTagEntries(co.t);
-    if (existing.length > 0) {
-      await pushAction(
-        session,
-        CO_CORE_NAME_CO,
-        { TagsRemove: { tags: existing } },
-        identity,
-      );
-    }
-  }
-
-  await pushAction(
-    session,
-    CO_CORE_NAME_CO,
-    { TagsInsert: { tags: [[CO_TAG_GROUP_NAME, trimmed]] } },
-    identity,
-  );
+  await upsertCoTag(session, identity, coId, CO_TAG_GROUP_NAME, trimmed);
 }
 
 /** Persist group avatar color on CO tags so all members see the same color. */
@@ -264,26 +270,7 @@ export async function setCoGroupAvatarColor(
   coId: string,
   color: GroupAvatarColor,
 ): Promise<void> {
-  const [stateCid] = await getCoState(coId);
-  if (stateCid) {
-    const co = (await resolveCid(session, stateCid)) as { t?: unknown };
-    const existing = avatarColorTagEntries(co.t);
-    if (existing.length > 0) {
-      await pushAction(
-        session,
-        CO_CORE_NAME_CO,
-        { TagsRemove: { tags: existing } },
-        identity,
-      );
-    }
-  }
-
-  await pushAction(
-    session,
-    CO_CORE_NAME_CO,
-    { TagsInsert: { tags: [[CO_TAG_GROUP_AVATAR_COLOR, color]] } },
-    identity,
-  );
+  await upsertCoTag(session, identity, coId, CO_TAG_GROUP_AVATAR_COLOR, color);
 }
 
 /**
@@ -299,32 +286,15 @@ export async function setCoMemberDisplayName(
   const trimmed = displayNameValue.trim();
   if (!trimmed) return;
 
-  const tagKey = displayNameTagKey(identity);
-  const [stateCid] = await getCoState(coId);
-  if (stateCid) {
-    const co = (await resolveCid(session, stateCid)) as { t?: unknown };
-    const existing = memberDisplayNameTagEntries(co.t, identity);
-    if (existing.some(([, value]) => value === trimmed) && existing.length === 1) {
-      rememberPeerName(identity, trimmed);
-      return;
-    }
-    if (existing.length > 0) {
-      await pushAction(
-        session,
-        CO_CORE_NAME_CO,
-        { TagsRemove: { tags: existing } },
-        identity,
-      );
-    }
-  }
-
-  await pushAction(
+  const wrote = await upsertCoTag(
     session,
-    CO_CORE_NAME_CO,
-    { TagsInsert: { tags: [[tagKey, trimmed]] } },
     identity,
+    coId,
+    displayNameTagKey(identity),
+    trimmed,
+    { skipIfUnchanged: true },
   );
-  rememberPeerName(identity, trimmed);
+  if (wrote || trimmed) rememberPeerName(identity, trimmed);
 }
 
 /** Push the local profile name to every listed group CO (best-effort). */
@@ -346,4 +316,3 @@ export async function publishDisplayNameToGroups(
     }),
   );
 }
-

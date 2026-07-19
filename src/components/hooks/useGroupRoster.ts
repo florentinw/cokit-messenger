@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   activeParticipants,
-  collectActiveParticipantsFromGroup,
-  collectPendingInviteesFromGroup,
+  collectGroupRoster,
   membershipStateFor,
 } from "../../lib/messenger";
 import {
@@ -67,10 +66,7 @@ export function useGroupRoster(
       }
       try {
         const session = await getSharedCoSession(selectedId);
-        const [active, pending] = await Promise.all([
-          collectActiveParticipantsFromGroup(session, selectedId),
-          collectPendingInviteesFromGroup(session, selectedId),
-        ]);
+        const { active, pending } = await collectGroupRoster(session, selectedId);
         if (cancelled) return;
         setSelectedParticipants(active.length > 0 ? active : localParticipantFallback);
         setSelectedPendingInvites(pending);

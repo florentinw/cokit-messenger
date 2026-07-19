@@ -8,14 +8,14 @@ import {
   markChatRead,
   membershipStateFor,
   publishDisplayNameToGroups,
+  RESET_LOCAL_DATA_HINT,
+  TAURI_REQUIRED_MESSAGE,
   truncateDid,
   useChatStoreRevision,
 } from "../lib/messenger";
 import {
   CO_CORE_NAME_MEMBERSHIP,
   MembershipState,
-  RESET_LOCAL_DATA_HINT,
-  TAURI_REQUIRED_MESSAGE,
   errorDetail,
   formatCoError,
   isTauriRuntimeAvailable,
@@ -51,13 +51,11 @@ export function AppShell() {
     localCoCid,
     CO_CORE_NAME_MEMBERSHIP,
     localSession,
-    "local",
     localHeads,
   );
   const membershipsState = useResolveCid<Memberships>(
     membershipCoreCid,
     localSession,
-    "local",
     localHeads,
   );
 
@@ -230,9 +228,11 @@ export function AppShell() {
 
   if (sessionError || identityError) {
     const notInTauri = !isTauriRuntimeAvailable() && sessionError;
+    const formatted = formatCoError(sessionError ?? identityError);
+    const isCorruptStorage = formatted.type === "corrupt_storage";
     const errorTitle = notInTauri
       ? "Open the desktop app"
-      : identityError && formatCoError(identityError).corruptStorage
+      : isCorruptStorage
         ? "Local CO data needs reset"
         : sessionError
           ? "Could not open local session"
@@ -242,15 +242,14 @@ export function AppShell() {
         ? TAURI_REQUIRED_MESSAGE
         : errorDetail(sessionError)
       : errorDetail(identityError);
-    const formatted = formatCoError(sessionError ?? identityError);
-    const copyMessage = `${errorTitle}\n\n${rawMessage}${formatted.corruptStorage ? `\n\n${RESET_LOCAL_DATA_HINT}` : ""}`;
+    const copyMessage = `${errorTitle}\n\n${rawMessage}${isCorruptStorage ? `\n\n${RESET_LOCAL_DATA_HINT}` : ""}`;
 
     return (
       <ErrorCard
         title={errorTitle}
         message={formatted.summary}
         copyText={copyMessage}
-        hint={formatted.corruptStorage ? <CorruptStorageHint /> : undefined}
+        hint={isCorruptStorage ? <CorruptStorageHint /> : undefined}
         details={rawMessage}
       />
     );

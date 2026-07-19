@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CID } from "multiformats";
-import { asDagNode, DagList } from "./dag-list";
+import { DagList } from "./dag-list";
 import { CoOperationError, formatCoError } from "./errors";
 import {
   createIdentity,
@@ -15,26 +15,13 @@ function headsKey(heads: CID[] | undefined): string {
   return heads?.map((h) => h.toString()).join("\0") ?? "";
 }
 
-/** Bump when `co-sdk-new-state` fires for a CO — refreshes nested core/cid hooks. */
-export function useCoStateRevision(co: string | undefined): number {
-  const [revision, setRevision] = useState(0);
-
-  useEffect(() => {
-    if (co === undefined) return;
-    let unlisten: (() => void) | undefined;
-    void listenCoSdkState(([coId]) => {
-      if (co === coId) setRevision((value) => value + 1);
-    }).then((fn) => {
-      unlisten = fn;
-    });
-    return () => {
-      unlisten?.();
-    };
-  }, [co]);
-
-  return revision;
-}
-
+/**
+ * Open (or reuse) a shared session for `co`.
+ * Keeps the previous session id while re-opening to avoid loading flashes.
+ *
+ * @param co - CO document id to open a session for
+ * @returns `{ sessionId, error }` — `sessionId` when open; `error` if open failed
+ */
 export function useCoSession(co: string): {
   sessionId: string | undefined;
   error: Error | undefined;
@@ -44,8 +31,6 @@ export function useCoSession(co: string): {
 
   useEffect(() => {
     let cancelled = false;
-    // Keep the previous session id while re-opening — clearing it flashes the
-    // whole app back through the identity loading screen.
 
     void getSharedCoSession(co)
       .then((opened) => {
@@ -66,13 +51,18 @@ export function useCoSession(co: string): {
   return { sessionId: session, error: sessionError };
 }
 
+/**
+ * Subscribe to tip CID + heads for a CO document (stale-while-revalidate).
+ *
+ * @param co - CO document id to follow
+ * @returns `[stateCid, heads]`, or `[undefined, undefined]` before the first load
+ */
 export function useCo(co: string): [CID | undefined, CID[] | undefined] {
   const [coState, setCoState] = useState<[CID | undefined, CID[]]>();
 
   useEffect(() => {
     let cancelled = false;
     let unlisten: (() => void) | undefined;
-    // Stale-while-revalidate: don't clear heads/state on resubscribe.
 
     void getCoState(co).then((init) => {
       if (!cancelled) setCoState(init);
@@ -97,15 +87,23 @@ export function useCo(co: string): [CID | undefined, CID[] | undefined] {
   return coState ?? [undefined, undefined];
 }
 
+/**
+ * Resolve the tip CID of a named core inside a CO document.
+ * Re-runs when `coCid` or `coHeads` change (drive those from {@link useCo}).
+ *
+ * @param coCid - Tip CID of the parent CO document; `undefined` while still loading
+ * @param coreId - Core name inside the CO (e.g. `"membership"`, `"room"`)
+ * @param session - Open session id; `undefined` while still loading
+ * @param coHeads - Optional heads used as a refresh key when the tip changes
+ * @returns Core tip CID; `undefined` while loading; `null` when the core is absent
+ */
 export function useCoCore(
   coCid: CID | undefined,
   coreId: string,
   session: string | undefined,
-  watchCo?: string,
   coHeads?: CID[],
 ): CID | undefined | null {
   const [coreState, setCoreState] = useState<CID | undefined | null>(undefined);
-  const revision = useCoStateRevision(watchCo);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,20 +112,11 @@ export function useCoCore(
         // Still loading session/CO — keep the previous core cid (stale-while-revalidate).
         return;
       }
-      const readCore = async () => {
-        const resolved = (await resolveCid(session, coCid)) as {
-          c?: Record<string, { state?: CID }>;
-        };
-        return resolved?.c?.[coreId]?.state;
+      const resolved = (await resolveCid(session, coCid)) as {
+        c?: Record<string, { state?: CID }>;
       };
-      let nextCore = await readCore();
-      // Mid-update resolves can omit cores; retry once before committing.
-      if (nextCore === undefined) {
-        await new Promise((r) => setTimeout(r, 32));
-        if (cancelled) return;
-        nextCore = await readCore();
-      }
       if (cancelled) return;
+      const nextCore = resolved?.c?.[coreId]?.state;
       // Always adopt the core for this CO document. Keeping a previous core CID
       // across local updates permanently hides new memberships (e.g. DidComm invites).
       setCoreState(nextCore !== undefined ? nextCore : null);
@@ -136,27 +125,31 @@ export function useCoCore(
     return () => {
       cancelled = true;
     };
-  }, [coCid, coreId, session, headsKey(coHeads), revision]);
+  }, [coCid, coreId, session, headsKey(coHeads)]);
 
   return coreState;
 }
 
+/**
+ * Resolve a CID to a typed value, refreshing when `refreshKey` (e.g. heads) changes.
+ *
+ * @typeParam T - Expected decoded value type
+ * @param cid - CID to resolve; `undefined` keeps the prior value; `null` clears it
+ * @param session - Open session id; `undefined` keeps the prior value
+ * @param refreshKey - Optional CID list used as a refresh dependency (e.g. heads)
+ * @returns Decoded value as `T`, or `undefined` while loading / after a `null` cid
+ */
 export function useResolveCid<T = unknown>(
   cid: CID | undefined | null,
   session: string | undefined,
-  watchCo?: string,
   refreshKey?: CID[],
 ): T | undefined {
   const [state, setState] = useState<T | undefined>();
-  const revision = useCoStateRevision(watchCo);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      // `undefined` cid/session: still loading — keep prior value.
       if (cid === undefined || session === undefined) return;
-      // `null` means the core is absent on this CO document — clear so callers
-      // can SWR their own list, and so we don't keep a stale resolve forever.
       if (cid === null) {
         if (!cancelled) setState(undefined);
         return;
@@ -168,7 +161,7 @@ export function useResolveCid<T = unknown>(
     return () => {
       cancelled = true;
     };
-  }, [cid, session, headsKey(refreshKey), revision]);
+  }, [cid, session, headsKey(refreshKey)]);
 
   return state;
 }
@@ -197,13 +190,21 @@ async function findNamedKeystoreDid(
   if (keyStoreKeys?.a === undefined) return undefined;
 
   const dagList = new DagList<[string, { v?: KeystoreKey }]>(
-    asDagNode(keyStoreKeys.a),
+    { n: keyStoreKeys.a.n, l: keyStoreKeys.a.l },
     sessionId,
   );
   const existing = await dagList.find((item) => item[1].v?.name === name);
   return existing?.[0];
 }
 
+/**
+ * Load or create a named did:key identity from the local CO keystore.
+ * Re-runs when local CO state updates so a missing keystore can appear later.
+ *
+ * @param name - Keystore entry name to find or create
+ * @param sessionId - Open session on the local CO; hook is idle when `undefined`
+ * @returns `{ identity?, error? }` — did:key when ready; `error` if load/create failed
+ */
 export function useDidKeyIdentity(
   name: string,
   sessionId: string | undefined,
@@ -212,7 +213,6 @@ export function useDidKeyIdentity(
   const [identityError, setIdentityError] = useState<Error | undefined>();
   const identityRef = useRef<string | undefined>(undefined);
   identityRef.current = identity;
-  // Re-run when local CO state updates — keystore may not exist on first paint.
   const [localStateCid] = useCo("local");
 
   useEffect(() => {

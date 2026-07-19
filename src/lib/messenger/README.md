@@ -14,7 +14,7 @@ It uses the built-in **co-messaging** cores that ship with `tauri-plugin-co-sdk`
 
 Same pattern as the [example todo app](https://github.com/1iolabs/example-cokit-todo-list) (core state + push actions), except messaging cores already exist. A custom `#[co]` crate is only needed for new domain types (e.g. Todo).
 
-Membership types come from `@1io/tauri-plugin-co-sdk`; room UI state is typed against the published `Room` schema.
+Membership types come from `@1io/tauri-plugin-co-sdk` (via `co-sdk-extras`); room UI state is typed against the published `Room` schema.
 
 ## Modules
 
@@ -27,3 +27,4 @@ Membership types come from `@1io/tauri-plugin-co-sdk`; room UI state is typed ag
 | `timeline.ts` | Action → chat timeline |
 | `format.ts` | Display helpers (`displayName`, times) |
 | `group-avatar.ts` | Avatar color palette (UI reads color from ChatStore) |
+| `types.ts` | Domain constants, room types, app runtime copy |
