@@ -1,0 +1,3 @@
+{
+  "install": "pnpm install && bash .cursor/install-co-cli.sh"
+}

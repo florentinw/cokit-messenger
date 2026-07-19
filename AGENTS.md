@@ -12,6 +12,34 @@ Services / commands (all already documented in `README.md` and `package.json`):
 - Desktop app (two networked windows): `pnpm tauri:dev` — separate identities for A/B messaging.
 - Typecheck/lint: `pnpm exec tsc --noEmit` (the repo has no separate ESLint script; `tsc` is the type gate). Full build: `pnpm build`.
 - Wipe local CO stores/identities: `pnpm clear:data`.
+- Inspect CO stores (tags, memberships, room): `co` CLI — see skill `.cursor/skills/co-cli/SKILL.md`.
+
+### CO CLI (`co`)
+
+Install into the cloud environment (or any Linux/macOS agent box) with:
+
+```bash
+bash .cursor/install-co-cli.sh
+```
+
+Or paste this into the Cursor Cloud environment **install** command (alongside `pnpm install`):
+
+```bash
+pnpm install && bash .cursor/install-co-cli.sh
+```
+
+That matches `.cursor/environment.json`. The script prefers `cargo binstall` when available, otherwise builds `co-cli` from the cokit git rev pinned in `src-tauri/Cargo.toml`.
+
+Always point `co` at the messenger instance (default `co` instance id is `co-cli` and will miss our store):
+
+```bash
+export CO_NO_KEYCHAIN=true
+export CO_INSTANCE_ID=cokit-messenger
+export CO_BASE_PATH="$PWD/tmp/data"   # tmp/data-b or tmp/data-c for other instances
+co co show local                      # local CO tags (incl. profile display_name)
+```
+
+Stop `tauri:dev` for that data dir before opening it with `co`.
 
 Non-obvious caveats for running on the Linux VM:
 - The GUI needs an X display. A virtual display is available at `DISPLAY=:1`; export it before launching the app.
