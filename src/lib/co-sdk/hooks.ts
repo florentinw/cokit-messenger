@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CID } from "multiformats";
 import { DagList } from "./dag-list";
+import { CoOperationError, formatCoError } from "./errors";
 import {
   createIdentity,
   getActions,
   getCoState,
   resolveCid,
-  sessionClose,
-  sessionOpen,
 } from "./invoke";
 import { listenCoSdkState } from "./state-listener";
+import { getSharedCoSession } from "./session-cache";
 import type { GetActionsResponse, KeystoreKey } from "./types";
 
 function headsKey(heads: CID[] | undefined): string {
@@ -45,18 +45,14 @@ export function useCoSession(co: string): {
 
   useEffect(() => {
     let cancelled = false;
-    let sessionId: string | undefined;
-    setSession(undefined);
-    setSessionError(undefined);
+    // Keep the previous session id while re-opening — clearing it flashes the
+    // whole app back through the identity loading screen.
 
-    void sessionOpen(co)
+    void getSharedCoSession(co)
       .then((opened) => {
-        if (cancelled) {
-          void sessionClose(opened).catch(() => {});
-          return;
-        }
-        sessionId = opened;
+        if (cancelled) return;
         setSession(opened);
+        setSessionError(undefined);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -65,9 +61,6 @@ export function useCoSession(co: string): {
 
     return () => {
       cancelled = true;
-      if (sessionId !== undefined) {
-        void sessionClose(sessionId).catch(() => {});
-      }
     };
   }, [co]);
 
@@ -80,6 +73,7 @@ export function useCo(co: string): [CID | undefined, CID[] | undefined] {
   useEffect(() => {
     let cancelled = false;
     let unlisten: (() => void) | undefined;
+    // Stale-while-revalidate: don't clear heads/state on resubscribe.
 
     void getCoState(co).then((init) => {
       if (!cancelled) setCoState(init);
@@ -117,12 +111,27 @@ export function useCoCore(
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (session === undefined || coCid === undefined) return;
-      const resolved = (await resolveCid(session, coCid)) as {
-        c?: Record<string, { state?: CID }>;
+      if (session === undefined || coCid === undefined) {
+        // Still loading session/CO — keep the previous core cid (stale-while-revalidate).
+        return;
+      }
+      const readCore = async () => {
+        const resolved = (await resolveCid(session, coCid)) as {
+          c?: Record<string, { state?: CID }>;
+        };
+        return resolved?.c?.[coreId]?.state;
       };
-      const coreCid = resolved?.c?.[coreId]?.state;
-      if (!cancelled) setCoreState(coreCid ?? null);
+      let nextCore = await readCore();
+      // Mid-update resolves can omit cores; retry once before committing.
+      if (nextCore === undefined) {
+        await new Promise((r) => setTimeout(r, 32));
+        if (cancelled) return;
+        nextCore = await readCore();
+      }
+      if (cancelled) return;
+      // Always adopt the core for this CO document. Keeping a previous core CID
+      // across local updates permanently hides new memberships (e.g. DidComm invites).
+      setCoreState(nextCore !== undefined ? nextCore : null);
     }
     void load();
     return () => {
@@ -145,7 +154,14 @@ export function useResolveCid<T = unknown>(
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (cid == null || session === undefined) return;
+      // `undefined` cid/session: still loading — keep prior value.
+      if (cid === undefined || session === undefined) return;
+      // `null` means the core is absent on this CO document — clear so callers
+      // can SWR their own list, and so we don't keep a stale resolve forever.
+      if (cid === null) {
+        if (!cancelled) setState(undefined);
+        return;
+      }
       const value = (await resolveCid(session, cid)) as T;
       if (!cancelled) setState(value);
     }
@@ -192,13 +208,16 @@ async function findNamedKeystoreDid(
 export function useDidKeyIdentity(
   name: string,
   sessionId: string | undefined,
-): string | undefined {
+): { identity?: string; error?: Error } {
   const [identity, setIdentity] = useState<string | undefined>();
+  const [identityError, setIdentityError] = useState<Error | undefined>();
+  const identityRef = useRef<string | undefined>(undefined);
+  identityRef.current = identity;
   // Re-run when local CO state updates — keystore may not exist on first paint.
   const [localStateCid] = useCo("local");
 
   useEffect(() => {
-    if (sessionId === undefined || identity !== undefined) return;
+    if (sessionId === undefined) return;
 
     const session = sessionId;
     let cancelled = false;
@@ -212,13 +231,24 @@ export function useDidKeyIdentity(
         if (cancelled) return;
         if (existing !== undefined) {
           setIdentity(existing);
+          setIdentityError(undefined);
           return;
         }
 
+        // Keystore can be briefly unreadable while local CO is rewriting.
+        // Never create a second identity or clear the one we already have.
+        if (identityRef.current !== undefined) return;
+
         const did = await createIdentity(name);
-        if (!cancelled) setIdentity(did);
+        if (!cancelled) {
+          setIdentity(did);
+          setIdentityError(undefined);
+        }
       } catch (err) {
         console.error("Failed to load identity", err);
+        if (cancelled) return;
+        if (identityRef.current !== undefined) return;
+        setIdentityError(new CoOperationError(formatCoError(err)));
       }
     }
 
@@ -226,17 +256,19 @@ export function useDidKeyIdentity(
     return () => {
       cancelled = true;
     };
-  }, [name, sessionId, localStateCid, identity]);
+  }, [name, sessionId, localStateCid]);
 
-  return identity;
+  return { identity, error: identityError };
 }
 
 export function useCoActions(
   heads: CID[] | undefined,
   session: string | undefined,
   count = 100,
+  watchCo?: string,
 ): GetActionsResponse | undefined {
   const [actions, setActions] = useState<GetActionsResponse>();
+  const revision = useCoStateRevision(watchCo);
 
   useEffect(() => {
     let cancelled = false;
@@ -249,7 +281,7 @@ export function useCoActions(
     return () => {
       cancelled = true;
     };
-  }, [heads, session, count]);
+  }, [headsKey(heads), session, count, revision]);
 
   return actions;
 }

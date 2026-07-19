@@ -1,0 +1,6 @@
+{
+  "productName": "CO Messenger (C)",
+  "build": {
+    "beforeDevCommand": ""
+  }
+}

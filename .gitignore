@@ -16,7 +16,7 @@ tmp/
 src-tauri/target/
 src-tauri/tmp/
 
-# Environment (keep .env.mock — used by `pnpm dev:ui`)
+# Environment
 .env
 .env.local
 .env.*.local

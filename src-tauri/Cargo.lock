@@ -1813,6 +1813,7 @@ dependencies = [
  "tauri-plugin-co-sdk",
  "tauri-plugin-opener",
  "tokio",
+ "window-vibrancy",
 ]
 
 [[package]]

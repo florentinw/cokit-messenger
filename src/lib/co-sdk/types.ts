@@ -30,38 +30,41 @@ export type MembershipsAction =
   | { Deactivate: { id: CoId; did: Did } }
   | { Remove: { id: CoId; did?: Did } };
 
+export const CO_CORE_NAME_CO = "co";
 export const CO_CORE_NAME_MEMBERSHIP = "membership";
-export const CO_CORE_NAME_ROOM = "room";
-export const IDENTITY_NAME = "messenger-identity";
 
-export const ROOM_CORE_CID = "QmXzU5G6K8japFjL1uNiqfTCb96mNrDEKcPsGpapQNQKXF";
-
-export interface RoomState {
-  name: string;
-  description: string;
-  avatar?: { "/": string } | null;
-  pinned_messages: string[];
+/**
+ * COKIT stores reducer actions with short CBOR keys (`f`/`t`/`c`/`p`).
+ * Some callers may still use the long names (`from`/`time`/`content`/`payload`).
+ */
+export interface ReducerAction<T> {
+  /** Sender DID — wire key `f`. */
+  f?: Did;
+  from?: Did;
+  /** Dispatch time — wire key `t`. */
+  t?: number;
+  time?: number;
+  /** Core name — wire key `c`. */
+  c?: string;
+  core?: string;
+  /** Action payload — wire key `p`. */
+  p?: T;
+  payload?: T;
 }
 
-export type TextMessageContent = {
-  msgtype: "text";
-  body: string;
-};
-
-export type MatrixEvent = {
-  event_id: string;
-  room_id: string;
-  timestamp: number;
-  state_key?: string | null;
-} & (
-  | { type: "m_room_message"; content: TextMessageContent }
-  | { type: "room_name"; content: { name: string } }
-);
-
-export interface ReducerAction<T> {
+export function reducerActionFrom<T>(action: ReducerAction<T> | unknown): {
   from: Did;
-  payload: T;
-  time?: number;
+  time: number | undefined;
+  core: string | undefined;
+  payload: T | undefined;
+} {
+  const raw = action as ReducerAction<T>;
+  return {
+    from: raw.f ?? raw.from ?? "unknown",
+    time: raw.t ?? raw.time,
+    core: raw.c ?? raw.core,
+    payload: raw.p ?? raw.payload,
+  };
 }
 
 export interface GetActionsResponse {

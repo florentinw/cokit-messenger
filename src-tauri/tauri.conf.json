@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "COKIT Messenger",
+  "productName": "CO Messenger",
   "version": "0.1.0",
   "identifier": "com.1io.cokit-messenger",
   "build": {
@@ -10,17 +10,19 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
-        "title": "COKIT Messenger",
+        "title": "CO Messenger",
         "width": 960,
         "height": 640,
         "resizable": true,
+        "transparent": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "trafficLightPosition": {
           "x": 16,
-          "y": 18
+          "y": 24
         }
       }
     ],
@@ -37,6 +39,10 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "bundleName": "CO Messenger",
+      "infoPlist": "./Info.plist"
+    }
   }
 }

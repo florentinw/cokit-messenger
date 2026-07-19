@@ -1,0 +1,17 @@
+--- a/co-sdk/src/services/application/epics/invite_receive.rs
++++ b/co-sdk/src/services/application/epics/invite_receive.rs
+@@ -82,9 +82,13 @@ async fn invited(context: CoContext, peer: PeerId, header: DidCommHeader, body:
+ 			network: payload.connectivity.clone(),
+ 			peer: Some(peer.to_bytes()),
+ 		};
+-		let membership_tags = tags!(
++		// Keep invite CO tags (e.g. display name, avatar_color) on the membership so
++		// the invitee can render them before opening the group CO.
++		let mut membership_tags = payload.tags;
++		membership_tags.append(&mut tags!(
+ 			{KnownTags::CoInviteMetadata}: storage.set_serialized(&metadata).await?,
+-		);
++		));
+ 
+ 		// membership
+ 		let reducer_state = CoReducerState::new(Some(payload.state), payload.heads.clone());

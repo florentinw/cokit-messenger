@@ -1,0 +1,114 @@
+import { truncateDid, useChatEntry } from "../../lib/messenger";
+import { Button } from "../global/Button";
+import { GroupAvatar } from "../global/GroupAvatar";
+
+type Props = {
+  coId: string;
+  /** Group name from CO `name` tag when invite state resolves. */
+  name?: string;
+  /** Inviter display name when known from invite tags. */
+  inviterName?: string;
+  /** True while Invite → Join handshake is still completing. */
+  pending?: boolean;
+  busy?: boolean;
+  error?: string;
+  onAccept: () => void;
+  onDecline: () => void;
+};
+
+function isResolvedGroupName(coId: string, name?: string): name is string {
+  if (!name || name === "Group chat" || name === coId) return false;
+  // Sidebar may pass a truncated coId as a display fallback — not a real name.
+  if (name === truncateDid(coId, 22)) return false;
+  return true;
+}
+
+export function InviteAcceptPane({
+  coId,
+  name: nameProp,
+  inviterName: inviterNameProp,
+  pending,
+  busy,
+  error,
+  onAccept,
+  onDecline,
+}: Props) {
+  const entry = useChatEntry(coId);
+  const name = isResolvedGroupName(coId, entry?.name)
+    ? entry!.name
+    : isResolvedGroupName(coId, nameProp)
+      ? nameProp
+      : undefined;
+  const inviterName = entry?.inviterName || inviterNameProp;
+  const hasName = !!name;
+  const title = hasName ? name : truncateDid(coId, 22);
+  const inviteHeadline = inviterName
+    ? hasName
+      ? `${inviterName} invited you to “${name}”`
+      : `${inviterName} invited you to this group`
+    : hasName
+      ? `You’ve been invited to “${name}”`
+      : "You’ve been invited to this group";
+
+  return (
+    <section className="content-pane layer-card relative flex h-full min-w-0 flex-1 flex-col">
+      <header className="flex h-12 shrink-0 items-center justify-between px-3.5">
+        <div className="flex min-w-0 flex-1 items-center gap-2 self-stretch">
+          <div className="flex min-w-0 items-center gap-2">
+            <GroupAvatar
+              coId={coId}
+              color={entry?.color}
+              className="size-6 rounded"
+              padClassName="p-[15%]"
+              syncFromCo={false}
+            />
+            <h1 className="type-body truncate text-foreground">{title}</h1>
+          </div>
+          <div data-tauri-drag-region className="min-w-0 flex-1 self-stretch" aria-hidden />
+        </div>
+      </header>
+
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-6 pb-8">
+        <div className="w-full max-w-sm">
+          <h1 className="text-center type-title text-foreground">
+            {pending
+              ? hasName
+                ? `Joining “${name}”…`
+                : "Joining this group…"
+              : inviteHeadline}
+          </h1>
+
+          {pending && (
+            <p className="mt-3 text-center type-body-regular text-muted">
+              Waiting for membership to become active. This can take a moment when
+              both peers are online.
+            </p>
+          )}
+
+          {error && (
+            <p className="mt-4 type-body text-error">{error}</p>
+          )}
+
+          {!pending && (
+            <div className="mt-8 flex justify-center gap-3">
+              <Button
+                variant="secondary"
+                isDisabled={busy}
+                onPress={onDecline}
+              >
+                Decline
+              </Button>
+              <Button
+                variant="primary"
+                isDisabled={busy}
+                onPress={onAccept}
+              >
+                {busy ? "Working…" : "Accept"}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}

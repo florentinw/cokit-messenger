@@ -3,20 +3,365 @@
 @import "@fontsource/inter/500.css";
 @import "@fontsource/inter/600.css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-primary: #1e1e1e;
-  --color-primary-elevated: #333333;
-  --color-secondary: #888888;
-  --color-border: #e8e8e8;
-  --color-bg-base: #ffffff;
-  --color-bg-elevated: #f7f5f2;
-  --color-bg-elevated-2: #ebe9e6;
-  --color-attention: #e81313;
+  --default-transition-duration: 0.15s;
+  --default-font-family: var(--font-sans);
+
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Warm messenger palette (named for layer utilities) */
+  --color-warm-cream: #f7f5f2;
+  --color-warm-cream-2: #f2f0ed;
+  --color-warm-charcoal: #1e1e1e;
+  --color-warm-charcoal-2: #333333;
+  --color-warm-muted: #888888;
+  --color-warm-separator: #e8e8e8;
+  --color-warm-white: #ffffff;
+  --color-warm-oled: #0a0a0a;
+  --color-warm-elevated-dark: #1c1c1e;
+  --color-warm-fill-dark: #2c2c2e;
+
+  --color-red-500: #e81313;
+  --color-red-600: #c40f0f;
+  --color-amber-500: #e8a317;
+  --color-amber-600: #ca9306;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+
+  --spacing-sidebar: 288px;
+  --radius-list-item: 12px;
+  --radius-avatar: 8px;
+  --radius-composer: 16px;
+  --sidebar-blur: 50px;
+
+  /* Warm cream wash over glass — reads like the mock sidebar. */
+  --color-sidebar-tint: color-mix(
+    in srgb,
+    var(--color-warm-cream) 82%,
+    transparent
+  );
+  --color-avatar-border: rgba(0, 0, 0, 0.1);
+  --color-avatar-bg: #ffffff;
+}
+
+@theme inline {
+  --color-surface: var(--layer-surface);
+  --color-surface-selected: var(--surface-selected);
+  --color-foreground: var(--layer-foreground);
+  --color-muted: var(--layer-muted);
+  --color-separator: var(--layer-separator);
+  --color-attention: var(--status-attention);
+  --color-error: var(--status-error);
+  --color-success: var(--status-success);
+  --color-ring: var(--layer-foreground);
+}
+
+:root {
+  /* Default = layer-card (main panes) */
+  --layer-surface: var(--color-warm-white);
+  --layer-foreground: var(--color-warm-charcoal);
+  --layer-muted: var(--color-warm-muted);
+  --layer-separator: var(--color-warm-separator);
+  --interactive-mix-step: 2%;
+  /* Selected rows / chips on glass (sidebar) — not a nested layer. */
+  --surface-selected: var(--color-warm-cream-2);
+
+  --status-attention: var(--color-amber-600);
+  --status-error: var(--color-red-500);
+  --status-success: var(--color-green-600);
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--layer-foreground) 18%, transparent);
+  color: var(--layer-foreground);
+}
+
+:root,
+:host {
+  @variant dark {
+    --layer-surface: var(--color-warm-oled);
+    --layer-foreground: var(--color-warm-white);
+    --layer-muted: rgba(255, 255, 255, 0.55);
+    --layer-separator: rgba(255, 255, 255, 0.12);
+    --interactive-mix-step: 7%;
+    --surface-selected: rgba(255, 255, 255, 0.08);
+
+    --status-attention: var(--color-amber-500);
+    --status-error: var(--color-red-500);
+    --status-success: var(--color-green-500);
+
+    --color-sidebar-tint: rgba(255, 255, 255, 0.06);
+    --color-avatar-border: rgba(0, 0, 0, 0.1);
+    --color-avatar-bg: #000000;
+  }
+}
+
+@utility layer-ground {
+  /* App shell glass — sidebar inherits tokens; content panes cover with layer-card. */
+  --layer-surface: transparent;
+  --layer-muted: color-mix(
+    in srgb,
+    transparent 35%,
+    var(--color-warm-charcoal)
+  );
+  --layer-foreground: var(--color-warm-charcoal);
+  --layer-separator: color-mix(
+    in srgb,
+    transparent 82%,
+    var(--color-warm-charcoal)
+  );
+  --interactive-mix-step: 2%;
+  /* Selected rows on glass (sidebar). */
+  --surface-selected: color-mix(
+    in srgb,
+    transparent 92%,
+    var(--color-warm-charcoal)
+  );
+
+  background: var(--color-sidebar-tint);
+  backdrop-filter: blur(var(--sidebar-blur));
+  -webkit-backdrop-filter: blur(var(--sidebar-blur));
+
+  @variant dark {
+    --layer-surface: transparent;
+    --layer-muted: rgba(255, 255, 255, 0.55);
+    --layer-foreground: var(--color-warm-white);
+    --layer-separator: rgba(255, 255, 255, 0.18);
+    --interactive-mix-step: 8%;
+    --surface-selected: rgba(255, 255, 255, 0.08);
+  }
+}
+
+@utility layer-card {
+  --layer-surface: var(--color-warm-white);
+  --layer-muted: var(--color-warm-muted);
+  --layer-foreground: var(--color-warm-charcoal);
+  --layer-separator: var(--color-warm-separator);
+  --interactive-mix-step: 2%;
+
+  @variant dark {
+    --layer-surface: var(--color-warm-oled);
+    --layer-muted: rgba(255, 255, 255, 0.55);
+    --layer-foreground: var(--color-warm-white);
+    --layer-separator: rgba(255, 255, 255, 0.12);
+    --interactive-mix-step: 7%;
+  }
+}
+
+@utility layer-inset {
+  /* Static recessed surfaces (bubbles, chips, secondary buttons) — light, low-chroma. */
+  --layer-surface: color-mix(in srgb, var(--color-warm-cream-2) 55%, #f1f1f1);
+  --layer-muted: var(--color-warm-muted);
+  --layer-foreground: var(--color-warm-charcoal);
+  --layer-separator: #e6e6e4;
+  --interactive-mix-step: 2%;
+
+  @variant dark {
+    --layer-surface: rgba(255, 255, 255, 0.1);
+    --layer-muted: rgba(255, 255, 255, 0.55);
+    --layer-foreground: var(--color-warm-white);
+    --layer-separator: rgba(255, 255, 255, 0.16);
+    --interactive-mix-step: 7%;
+  }
+}
+
+@utility layer-accent {
+  --layer-surface: var(--color-warm-charcoal);
+  --layer-muted: rgba(255, 255, 255, 0.55);
+  --layer-foreground: var(--color-warm-white);
+  --layer-separator: rgba(255, 255, 255, 0.16);
+  --interactive-mix-step: 4%;
+
+  --status-attention: var(--color-amber-500);
+  --status-error: var(--color-red-500);
+  --status-success: var(--color-green-500);
+
+  @variant dark {
+    --layer-surface: var(--color-warm-fill-dark);
+    --layer-muted: rgba(255, 255, 255, 0.55);
+    --layer-foreground: var(--color-warm-white);
+    --layer-separator: rgba(255, 255, 255, 0.16);
+    --interactive-mix-step: 8%;
+  }
+}
+
+@utility interactive {
+  cursor: default;
+  --level: 0;
+
+  &:where(
+      :hover,
+      [data-hovered],
+      [data-pressed],
+      [data-interacting]
+    ):not(:disabled, [aria-disabled="true"]) {
+    background-color: color-mix(
+      in srgb,
+      var(--layer-surface)
+        calc(100% - ((var(--level) + 1) * var(--interactive-mix-step) * 2.5)),
+      var(--layer-foreground)
+    );
+  }
+
+  &:is(:disabled, [aria-disabled="true"]) {
+    opacity: 0.5;
+  }
+}
+
+:is(.layer-ground, .layer-card, .layer-inset, .layer-accent) .interactive {
+  --level: 0;
+}
+
+:is(.layer-ground, .layer-card, .layer-inset, .layer-accent)
+  .interactive
+  .interactive {
+  --level: 1;
+}
+
+:is(.layer-ground, .layer-card, .layer-inset, .layer-accent)
+  .interactive
+  .interactive
+  .interactive {
+  --level: 2;
+}
+
+@utility type-body {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  letter-spacing: -0.14px;
+}
+
+@utility type-body-regular {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: -0.14px;
+}
+
+@utility type-caption {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: -0.12px;
+}
+
+@utility type-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: -0.3px;
+}
+
+/* Pill inputs: stay on the current layer; focus only changes border color. */
+@utility input-pill {
+  height: 2rem;
+  width: 100%;
+  border-radius: 9999px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--layer-separator);
+  background-color: var(--layer-surface);
+  padding-inline: 1rem;
+  color: var(--layer-foreground);
+  outline: none;
+}
+
+@utility input-pill-focus {
+  &:focus {
+    border-color: var(--layer-foreground);
+  }
+}
+
+/* Full-window dialog scrim — dim only, never backdrop-filter blur */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(30, 30, 30, 0.35);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.modal-overlay[data-entering] {
+  animation: modal-overlay-fade 150ms ease-out;
+}
+
+.modal-overlay[data-exiting] {
+  animation: modal-overlay-fade 150ms ease-in reverse;
+}
+
+@keyframes modal-overlay-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-dialog {
+  transform-origin: center center;
+}
+
+.modal-dialog[data-entering] {
+  animation: modal-dialog-scale 150ms ease-out;
+}
+
+.modal-dialog[data-exiting] {
+  animation: modal-dialog-scale 150ms ease-in reverse;
+}
+
+@keyframes modal-dialog-scale {
+  from {
+    transform: scale(0.98);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Context menus — scale + fade from the top-right corner */
+.action-menu-popover {
+  transform-origin: top right;
+}
+
+.action-menu-popover[data-entering] {
+  animation: action-menu-pop 140ms ease-out;
+}
+
+.action-menu-popover[data-exiting] {
+  animation: action-menu-pop 110ms ease-in reverse;
+}
+
+@keyframes action-menu-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+:where(.dark, .dark *) .modal-overlay,
+.dark .modal-overlay {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 /* Must live in @layer base so Tailwind utilities can override */
 @layer base {
+  html {
+    color-scheme: light dark;
+  }
+
   html,
   body,
   #root {
@@ -24,21 +369,43 @@
     margin: 0;
   }
 
+  html.tauri-vibrancy,
+  html.tauri-vibrancy body,
+  html.tauri-vibrancy #root {
+    background: transparent;
+  }
+
   body {
     font-family: var(--font-sans);
-    color: var(--color-primary);
-    background: var(--color-bg-base);
+    color: var(--layer-foreground);
+    background: var(--layer-surface);
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Soft warm backdrop so sidebar glass blur is visible outside Tauri vibrancy */
+  html:not(.tauri-vibrancy) body {
+    background: var(--color-warm-cream);
+  }
+
+  html:not(.tauri-vibrancy).dark body {
+    background: var(--color-warm-oled);
+  }
+
+  html:not(.tauri-vibrancy) #root {
+    background: transparent;
+  }
+
   * {
     box-sizing: border-box;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   button {
     font: inherit;
-    cursor: pointer;
+    cursor: default;
     border: none;
     background: transparent;
     padding: 0;
@@ -50,11 +417,100 @@
     border: none;
     outline: none;
     background: transparent;
+    cursor: text;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  .message-bubble {
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+  }
+
+  /* Tauri overlay titlebar: drag from chrome, keep controls clickable */
+  [data-tauri-drag-region] {
+    -webkit-app-region: drag;
+  }
+
+  button,
+  input,
+  textarea,
+  select,
+  a,
+  [data-tauri-drag-region-exclude] {
+    -webkit-app-region: no-drag;
+  }
+
+  :is(input, textarea, select, button, [contenteditable="true"]) {
+    font: inherit;
+    letter-spacing: inherit;
   }
 }
 
 @layer components {
   .btn-icon {
-    @apply flex size-7 shrink-0 items-center justify-center rounded-lg hover:bg-bg-elevated-2;
+    @apply interactive flex size-7 shrink-0 items-center justify-center rounded-lg bg-transparent;
+
+    & > svg {
+      @apply size-6 shrink-0;
+    }
+  }
+
+  .avatar-tile {
+    @apply overflow-hidden rounded-lg;
+    border: none;
+    box-shadow: inset 0 0 0 1px var(--color-avatar-border);
+    background: var(--color-avatar-bg);
+  }
+
+  /* Circular profile faces (participants, user placeholder) — same inset stroke. */
+  .avatar-face {
+    box-shadow: inset 0 0 0 1px var(--color-avatar-border);
+  }
+
+  /*
+   * Sidebar resize edge: keep a stable 1px border for layout.
+   * Hover / drag thicken via box-shadow (paints outside the box — no jump).
+   * Outline would wrap the whole pane, so shadow on the right edge only.
+   */
+  .sidebar-pane:has([data-sidebar-resize]:hover),
+  .sidebar-pane:has([data-sidebar-resize]:focus-visible),
+  .sidebar-pane[data-resizing] {
+    box-shadow: 1px 0 0 0 var(--color-separator);
+  }
+
+  .btn-pill {
+    @apply box-border flex h-7 min-h-7 max-h-7 shrink-0 items-center justify-center overflow-hidden rounded-full px-3 type-body;
+
+    & > svg {
+      @apply size-4 shrink-0;
+    }
+  }
+
+  /* Native macOS vibrancy paints blur — keep a light warm tint so glass matches inset. */
+  html.tauri-vibrancy .layer-ground {
+    background: var(--color-sidebar-tint);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .content-pane {
+    @apply layer-card bg-surface text-foreground;
+  }
+
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--layer-separator);
+    border-top-color: var(--layer-muted);
+    border-radius: 50%;
+    animation: loading-spin 0.8s linear infinite;
+  }
+
+  @keyframes loading-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 }
