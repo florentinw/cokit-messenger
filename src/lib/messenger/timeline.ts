@@ -1,5 +1,5 @@
 import { displayName } from "./format";
-import { CO_CORE_NAME_CO, type MatrixEvent, type RoomSystemEvent } from "./types";
+import { CO_CORE, type MatrixEvent, type RoomSystemEvent } from "./types";
 
 /**
  * COKIT stores reducer actions with short CBOR keys (`f`/`t`/`c`/`p`).
@@ -172,7 +172,7 @@ export function extractTimelineItems(
     const ts = eventTs ?? 0;
 
     // Group CO core actions (shared across members).
-    if (core === CO_CORE_NAME_CO || core === undefined) {
+    if (core === CO_CORE || core === undefined) {
       const coEvent = systemEventFromCoAction(payload, from, ts, index);
       if (coEvent) {
         items.push({ ...coEvent, sortIndex: index, hasTime });
@@ -294,7 +294,7 @@ function finalizeTimelineOrder(items: TimedTimelineItem[]): ChatTimelineItem[] {
     .map(({ sortIndex: _, hasTime: __, ...item }) => item);
 }
 
-/** Map group-CO `ParticipantJoin` / `ParticipantRemove` into timeline system events. */
+/** Map wire CoMember actions (`ParticipantJoin` / `ParticipantRemove`) into timeline system events. */
 function systemEventFromCoAction(
   payload: Record<string, unknown>,
   from: string,

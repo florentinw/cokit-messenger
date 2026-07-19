@@ -7,14 +7,13 @@ const sessions = new Map<string, Promise<string>>();
  * Return a shared open session for `coId`, opening one if needed.
  * Failed opens are not cached so callers can retry after membership changes.
  *
- * @param coId - CO document id to open (or reuse) a session for
+ * @param coId - CO id to open (or reuse) a session for
  * @returns Promise of the shared session id string
  */
 export function getSharedCoSession(coId: string): Promise<string> {
   let pending = sessions.get(coId);
   if (!pending) {
     pending = sessionOpen(coId).catch((err) => {
-      // Don't cache failures — e.g. open before membership is Active, then retry after Join completes.
       sessions.delete(coId);
       throw err;
     });
@@ -26,7 +25,7 @@ export function getSharedCoSession(coId: string): Promise<string> {
 /**
  * Drop a cached session so the next open starts fresh (e.g. after membership activates).
  *
- * @param coId - CO document id whose cached session should be closed and removed
+ * @param coId - CO id whose cached session should be closed and removed
  * @returns `void` (close runs in the background)
  */
 export function invalidateSharedCoSession(coId: string): void {

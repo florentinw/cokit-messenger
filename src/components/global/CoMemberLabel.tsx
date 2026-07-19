@@ -14,7 +14,7 @@ type Props = {
 };
 
 /** Display name in primary, truncated DID in secondary when a profile name exists. */
-export function ParticipantLabel({ did, identity, className }: Props) {
+export function CoMemberLabel({ did, identity, className }: Props) {
   useSyncExternalStore(subscribePeerNames, getPeerNamesRevision, () => 0);
   const name = displayName(did, identity);
   const id = truncateDid(did, 22);

@@ -3,17 +3,21 @@ import type { CID } from "multiformats";
 import {
   chatStore,
   displayName,
-  inviteDisplayMetaFromMembership,
-  membershipStateFor,
+  inviteDisplayMetaFromLocalMembership,
+  localMembershipStateFor,
   refreshChatFromCo,
   refreshChatsFromCo,
 } from "../../lib/messenger";
-import { MembershipState, listenCoSdkState, type Membership } from "../../lib/co-sdk-extras";
+import {
+  LocalMembershipState,
+  listenCoState,
+  type LocalMembership,
+} from "../../lib/co-sdk-extras";
 
-/** Hydrate ChatStore for sidebar memberships (invites + active chats). */
+/** Hydrate ChatStore for sidebar LocalMemberships (invites + active chats). */
 export function useChatHydration(
   localSession: string | undefined,
-  sidebarMemberships: Membership[],
+  sidebarMemberships: LocalMembership[],
   identity: string | undefined,
   selectedIdRef: RefObject<string | undefined>,
 ) {
@@ -22,14 +26,14 @@ export function useChatHydration(
     async function hydrate() {
       if (!localSession || sidebarMemberships.length === 0) return;
 
-      const pending: Membership[] = [];
+      const pending: LocalMembership[] = [];
       const active: string[] = [];
       for (const m of sidebarMemberships) {
-        const state = membershipStateFor(m, identity);
+        const state = localMembershipStateFor(m, identity);
         if (
-          state === MembershipState.Invite ||
-          state === MembershipState.Join ||
-          state === MembershipState.Pending
+          state === LocalMembershipState.Invite ||
+          state === LocalMembershipState.Join ||
+          state === LocalMembershipState.Pending
         ) {
           pending.push(m);
         } else {
@@ -39,7 +43,7 @@ export function useChatHydration(
 
       for (const m of pending) {
         if (cancelled) return;
-        const inviteMeta = await inviteDisplayMetaFromMembership(localSession, m);
+        const inviteMeta = await inviteDisplayMetaFromLocalMembership(localSession, m);
         if (cancelled) return;
         const inviterLabel =
           inviteMeta.inviterName ||
@@ -65,7 +69,7 @@ export function useChatHydration(
 
 /**
  * Stable app-lifetime multiplexer — refs hold active ids / selection / identity.
- * Debounces CO state events into `refreshChatFromCo`.
+ * Debounces CO tip events into `refreshChatFromCo`.
  */
 export function useChatStateMultiplexer(
   activeIdsRef: MutableRefObject<Set<string>>,
@@ -107,7 +111,7 @@ export function useChatStateMultiplexer(
     }
 
     let unlisten: (() => void) | undefined;
-    void listenCoSdkState(([coId, stateCid, heads]) => {
+    void listenCoState(([coId, stateCid, heads]) => {
       if (coId === "local") return;
       if (!activeIdsRef.current.has(coId)) return;
       schedule(coId, { stateCid, heads });

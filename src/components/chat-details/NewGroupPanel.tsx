@@ -11,8 +11,8 @@ import {
 } from "../global/ContentPaneHeader";
 import { GroupAvatarColorPicker } from "../global/GroupAvatar";
 import { Icon } from "../global/icons/Icon";
-import { ParticipantRow } from "../global/ParticipantRow";
-import { InviteParticipantDialog } from "./InviteParticipantDialog";
+import { CoMemberRow } from "../global/CoMemberRow";
+import { InviteCoMemberDialog } from "./InviteCoMemberDialog";
 
 export type CreateDraft = {
   name: string;
@@ -72,7 +72,7 @@ export function NewGroupPanel({
 
   async function handleInvite(inviteeDid: string) {
     if (invitees.includes(inviteeDid)) {
-      throw new Error("That participant is already on the invite list.");
+      throw new Error("That member is already on the invite list.");
     }
     setInvitees((prev) => [...prev, inviteeDid]);
   }
@@ -119,24 +119,24 @@ export function NewGroupPanel({
         </div>
 
         <div className="mt-6 flex flex-col">
-          <p className="px-5 pb-1 type-body-regular text-muted">Participants</p>
+          <p className="px-5 pb-1 type-body-regular text-muted">Members</p>
           <div className="px-4">
             <Button
               variant="secondary"
               isDisabled={!canInvite}
               onPress={() => setInviteDialogOpen(true)}
               className="w-full gap-1"
-              aria-label="Invite participant"
+              aria-label="Invite member"
             >
               <Icon name="plus" />
-              Invite participant
+              Invite member
             </Button>
           </div>
 
           <div className="px-4">
             {identity && (
               <div className="mt-2">
-                <ParticipantRow
+                <CoMemberRow
                   did={identity}
                   identity={identity}
                   trailing={
@@ -147,7 +147,7 @@ export function NewGroupPanel({
             )}
 
             {invitees.map((did) => (
-              <ParticipantRow
+              <CoMemberRow
                 key={did}
                 did={did}
                 trailing={
@@ -177,7 +177,7 @@ export function NewGroupPanel({
         )}
       </form>
 
-      <InviteParticipantDialog
+      <InviteCoMemberDialog
         open={inviteDialogOpen}
         identity={identity}
         onClose={() => setInviteDialogOpen(false)}

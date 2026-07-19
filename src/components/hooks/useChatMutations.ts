@@ -4,20 +4,20 @@ import {
   chatStore,
   createGroupChat,
   declineInvite,
-  inviteParticipant,
-  joinMembership,
-  leaveMembership,
+  inviteCoMember,
+  joinLocalMembership,
+  leaveLocalMembership,
   markChatRead,
-  removeParticipant,
+  removeCoMember,
   renameGroupChat,
-  revokeInvite,
+  revokeCoMemberInvite,
   setGroupAvatarColor,
   type GroupAvatarColor,
 } from "../../lib/messenger";
 import {
   invalidateSharedCoSession,
-  MembershipState,
-  type Membership,
+  LocalMembershipState,
+  type LocalMembership,
 } from "../../lib/co-sdk-extras";
 import type { Pane } from "../pane";
 
@@ -31,7 +31,7 @@ type Params = {
   identity: string | undefined;
   localSession: string | undefined;
   focusedId: string | undefined;
-  setMemberships: Dispatch<SetStateAction<Membership[]>>;
+  setMemberships: Dispatch<SetStateAction<LocalMembership[]>>;
   setCreateError: Dispatch<SetStateAction<string | undefined>>;
   setInviteError: Dispatch<SetStateAction<string | undefined>>;
   createSidebarBaselineRef: MutableRefObject<Set<string> | null>;
@@ -69,11 +69,11 @@ export function useChatMutations({
       setCreateError(undefined);
       try {
         const coId = await createGroupChat(identity, name, avatarColor);
-        await joinMembership(localSession, identity, coId);
+        await joinLocalMembership(localSession, identity, coId);
         const inviteErrors: string[] = [];
         for (const inviteeDid of inviteeDids) {
           try {
-            await inviteParticipant(identity, coId, inviteeDid);
+            await inviteCoMember(identity, coId, inviteeDid);
           } catch (err) {
             console.error(err);
             inviteErrors.push(err instanceof Error ? err.message : String(err));
@@ -86,7 +86,7 @@ export function useChatMutations({
             ...prev,
             {
               id: coId,
-              did: { [identity]: MembershipState.Active },
+              did: { [identity]: LocalMembershipState.Active },
               state: [],
               tags: [],
             },
@@ -124,17 +124,17 @@ export function useChatMutations({
   const onLeave = useCallback(async () => {
     if (!identity || !localSession || !focusedId) return;
     const leavingId = focusedId;
-    await leaveMembership(localSession, identity, leavingId);
+    await leaveLocalMembership(localSession, identity, leavingId);
     setMemberships((prev) => prev.filter((m) => m.id !== leavingId));
     chatStore.remove(leavingId);
     invalidateSharedCoSession(leavingId);
     nav.openEmpty();
   }, [identity, localSession, focusedId, setMemberships, nav]);
 
-  const onRemoveParticipant = useCallback(
-    async (participantDid: string) => {
+  const onRemoveCoMember = useCallback(
+    async (memberDid: string) => {
       if (!identity || !localSession || !focusedId) return;
-      await removeParticipant(identity, focusedId, participantDid);
+      await removeCoMember(identity, focusedId, memberDid);
       bumpRoster();
     },
     [identity, localSession, focusedId, bumpRoster],
@@ -143,7 +143,7 @@ export function useChatMutations({
   const onRevokeInvite = useCallback(
     async (inviteeDid: string) => {
       if (!identity || !focusedId) return;
-      await revokeInvite(identity, focusedId, inviteeDid);
+      await revokeCoMemberInvite(identity, focusedId, inviteeDid);
       bumpRoster();
     },
     [identity, focusedId, bumpRoster],
@@ -154,7 +154,7 @@ export function useChatMutations({
       if (!identity || !localSession || !focusedId) {
         throw new Error("Identity or session is not ready yet. Wait a moment and try again.");
       }
-      await inviteParticipant(identity, focusedId, inviteeDid);
+      await inviteCoMember(identity, focusedId, inviteeDid);
       bumpRoster();
     },
     [identity, localSession, focusedId, bumpRoster],
@@ -195,7 +195,7 @@ export function useChatMutations({
         setMemberships((prev) =>
           prev.map((m) =>
             m.id === coId
-              ? { ...m, did: { ...m.did, [identity]: MembershipState.Join } }
+              ? { ...m, did: { ...m.did, [identity]: LocalMembershipState.Join } }
               : m,
           ),
         );
@@ -232,7 +232,7 @@ export function useChatMutations({
   return {
     onCreate,
     onLeave,
-    onRemoveParticipant,
+    onRemoveCoMember,
     onRevokeInvite,
     onInvite,
     onMessagesSeen,

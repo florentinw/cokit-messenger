@@ -15,17 +15,17 @@ import {
 } from "../global/ContentPaneHeader";
 import { GroupAvatarColorPicker } from "../global/GroupAvatar";
 import { Icon } from "../global/icons/Icon";
-import { ParticipantRow } from "../global/ParticipantRow";
-import { InviteParticipantDialog } from "./InviteParticipantDialog";
+import { CoMemberRow } from "../global/CoMemberRow";
+import { InviteCoMemberDialog } from "./InviteCoMemberDialog";
 
 type Props = {
   coId: string;
   identity?: string;
-  participants: string[];
+  members: string[];
   pendingInvites?: string[];
   onClose: () => void;
   onLeave: () => Promise<void>;
-  onRemoveParticipant?: (participantDid: string) => Promise<void>;
+  onRemoveCoMember?: (memberDid: string) => Promise<void>;
   onInvite?: (inviteeDid: string) => Promise<void>;
   onRevokeInvite?: (inviteeDid: string) => Promise<void>;
   onSave?: (draft: { name: string; avatarColor: GroupAvatarColor }) => Promise<void>;
@@ -39,11 +39,11 @@ type ConfirmState =
 export function GroupDetails({
   coId,
   identity,
-  participants,
+  members,
   pendingInvites = [],
   onClose,
   onLeave,
-  onRemoveParticipant,
+  onRemoveCoMember,
   onInvite,
   onRevokeInvite,
   onSave,
@@ -63,7 +63,7 @@ export function GroupDetails({
   const [draftColor, setDraftColor] = useState<GroupAvatarColor>(storeColor);
 
   const roster =
-    participants.length > 0 ? participants : identity ? [identity] : [];
+    members.length > 0 ? members : identity ? [identity] : [];
   const pending = useMemo(() => {
     const active = new Set(roster);
     const hidden = new Set(hiddenPending);
@@ -74,7 +74,7 @@ export function GroupDetails({
   }, [pendingInvites, optimisticPending, hiddenPending, roster]);
   const canInvite = !!onInvite && !!identity && !actionBusy;
   const canRevoke = !!onRevokeInvite && !!identity && !actionBusy;
-  const canRemove = !!onRemoveParticipant && !!identity && !actionBusy;
+  const canRemove = !!onRemoveCoMember && !!identity && !actionBusy;
   const trimmedDraft = draftName.trim();
   const nameDirty = trimmedDraft.length > 0 && trimmedDraft !== name.trim();
   const colorDirty = draftColor !== savedColor;
@@ -147,8 +147,8 @@ export function GroupDetails({
         setHiddenPending((prev) => (prev.includes(did) ? prev : [...prev, did]));
         setOptimisticPending((prev) => prev.filter((entry) => entry !== did));
         await onRevokeInvite(did);
-      } else if (onRemoveParticipant) {
-        await onRemoveParticipant(confirmState.did);
+      } else if (onRemoveCoMember) {
+        await onRemoveCoMember(confirmState.did);
       }
       setConfirmState(undefined);
     } finally {
@@ -194,7 +194,7 @@ export function GroupDetails({
         </div>
 
         <div className="mt-6 flex flex-col gap-2 pb-6">
-          <p className="px-5 pb-1 type-body-regular text-muted">Participants</p>
+          <p className="px-5 pb-1 type-body-regular text-muted">Members</p>
           <div className="px-4">
             <Button
               variant="secondary"
@@ -204,7 +204,7 @@ export function GroupDetails({
               aria-label={canInvite ? "Invite by DID" : "Not available"}
             >
               <Icon name="plus" />
-              Invite participant
+              Invite member
             </Button>
           </div>
 
@@ -222,7 +222,7 @@ export function GroupDetails({
 
               return (
                 <li key={did}>
-                  <ParticipantRow
+                  <CoMemberRow
                     did={did}
                     identity={identity}
                     trailing={
@@ -231,7 +231,7 @@ export function GroupDetails({
                           <span className="type-body-regular text-muted">You</span>
                         )}
                         <ActionMenu
-                          label="Participant options"
+                          label="Member options"
                           isDisabled={actionBusy}
                           actions={actions}
                           onAction={(id) => {
@@ -252,7 +252,7 @@ export function GroupDetails({
             })}
             {pending.map((did) => (
               <li key={`pending-${did}`}>
-                <ParticipantRow
+                <CoMemberRow
                   did={did}
                   identity={identity}
                   trailing={
@@ -285,7 +285,7 @@ export function GroupDetails({
       </div>
 
       {onInvite && (
-        <InviteParticipantDialog
+        <InviteCoMemberDialog
           open={inviteDialogOpen}
           identity={identity}
           onClose={() => setInviteDialogOpen(false)}
@@ -310,7 +310,7 @@ export function GroupDetails({
 
       <ConfirmDialog
         open={confirmState?.kind === "remove"}
-        title="Remove participant"
+        title="Remove member"
         description={
           confirmState?.kind === "remove" ? (
             <>

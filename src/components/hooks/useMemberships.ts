@@ -1,18 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  collectMembershipList,
+  collectLocalMemberships,
   isSidebarMembership,
-  membershipStateFor,
+  localMembershipStateFor,
 } from "../../lib/messenger";
-import { MembershipState, type Membership, type Memberships } from "../../lib/co-sdk-extras";
+import {
+  LocalMembershipState,
+  type LocalMembership,
+  type LocalMemberships,
+} from "../../lib/co-sdk-extras";
 
-/** Load and stabilize the local membership list for the sidebar. */
+/** Load and stabilize the LocalMembership list for the sidebar. */
 export function useMemberships(
   localSession: string | undefined,
-  membershipsState: Memberships | undefined,
+  membershipsState: LocalMemberships | undefined | null,
   identity: string | undefined,
 ) {
-  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [memberships, setMemberships] = useState<LocalMembership[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -20,9 +24,9 @@ export function useMemberships(
       if (!localSession) return;
       // While membership state is refetching, keep the previous list to avoid
       // emptying the sidebar and clearing the selected chat.
-      if (membershipsState === undefined) return;
+      if (membershipsState == null) return;
       const raw = membershipsState?.memberships ?? membershipsState;
-      const list = await collectMembershipList(localSession, raw);
+      const list = await collectLocalMemberships(localSession, raw);
       if (cancelled) return;
       const next = list.filter((m) => m.id && m.id !== "local");
       setMemberships((prev) => {
@@ -45,7 +49,7 @@ export function useMemberships(
   const activeCoIds = useMemo(
     () =>
       sidebarMemberships
-        .filter((m) => membershipStateFor(m, identity) === MembershipState.Active)
+        .filter((m) => localMembershipStateFor(m, identity) === LocalMembershipState.Active)
         .map((m) => m.id),
     [sidebarMemberships, identity],
   );

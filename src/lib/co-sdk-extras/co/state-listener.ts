@@ -5,12 +5,12 @@ import {
 import type { Subscription } from "rxjs";
 
 /**
- * Promise-style wrapper around the official RxJS `co-sdk-new-state` listener.
+ * Promise-style wrapper around the official RxJS CO tip/heads listener.
  *
  * @param onEvent - Callback invoked with each `[coId, tipCid, heads]` state event
  * @returns Promise that resolves to an unsubscribe function
  */
-export async function listenCoSdkState(
+export async function listenCoState(
   onEvent: (event: CoSdkStateEvent) => void,
 ): Promise<() => void> {
   const subscription: Subscription = createCoSdkStateEventListener().subscribe({

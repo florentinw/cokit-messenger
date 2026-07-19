@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  useCo,
-  useCoreTipCid,
+  useCoTip,
+  useCore,
   useCoSession,
-  useResolveCid,
   resolveCid,
 } from "../../lib/co-sdk-extras";
 import {
   dateChipLabel,
   ensureRoomCore,
   refreshChatFromCo,
+  ROOM_CORE,
   sendTextMessage,
   setRoomName,
   timelineFromEntry,
@@ -73,9 +73,8 @@ export function ChatPane({
 }: Props) {
   const entry = useChatEntry(coId);
   const { sessionId: session, error: sessionError } = useCoSession(coId);
-  const [coCid, heads] = useCo(coId);
-  const roomCoreCid = useCoreTipCid(coCid, "room", session, heads);
-  const room = useResolveCid<RoomState>(roomCoreCid, session, heads);
+  const [coCid, heads] = useCoTip(coId);
+  const room = useCore<RoomState>(coId, ROOM_CORE);
   const [bootstrapping, setBootstrapping] = useState(false);
   const [ready, setReady] = useState(false);
   const [composerError, setComposerError] = useState<string>();
