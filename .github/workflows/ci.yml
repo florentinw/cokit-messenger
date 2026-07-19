@@ -15,28 +15,58 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'src-tauri/**'
+              - 'public/**'
+              - 'scripts/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'index.html'
+              - 'vite.config.*'
+              - 'tsconfig*.json'
+              - '.npmrc'
+              - '.github/workflows/**'
+
+      - name: Skip non-code changes
+        if: steps.filter.outputs.code != 'true'
+        run: echo "No app/code paths changed — skipping build."
+
       - uses: pnpm/action-setup@v5
+        if: steps.filter.outputs.code == 'true'
         with:
           version: 9.7.1
 
       - name: Setup Node.js
+        if: steps.filter.outputs.code == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: lts/*
           cache: pnpm
 
       - name: Install Rust stable
+        if: steps.filter.outputs.code == 'true'
         uses: dtolnay/rust-toolchain@stable
 
       - name: Rust cache
+        if: steps.filter.outputs.code == 'true'
         uses: swatinem/rust-cache@v2
         with:
           workspaces: ./src-tauri -> target
+          shared-key: tauri-macos
+          cache-on-failure: true
 
       - name: Install frontend dependencies
+        if: steps.filter.outputs.code == 'true'
         run: pnpm install --frozen-lockfile
 
-      # macos-latest is Apple Silicon — build native (no --target) so the
-      # bundler and cargo agree on target/release/, not a triple subdirectory.
-      - name: Build (Apple Silicon)
-        run: pnpm tauri build
+      # Debug build still compiles frontend + Rust + bundles the app, but skips
+      # release optimizations (the ~13m bottleneck). Full release builds stay on
+      # the Release workflow when merging to main.
+      - name: Build (Apple Silicon, debug)
+        if: steps.filter.outputs.code == 'true'
+        run: pnpm tauri build --debug

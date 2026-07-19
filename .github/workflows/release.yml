@@ -3,6 +3,18 @@ name: Release
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'src-tauri/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'index.html'
+      - 'vite.config.*'
+      - 'tsconfig*.json'
+      - '.npmrc'
+      - '.github/workflows/release.yml'
 
 concurrency:
   group: release-main
@@ -40,20 +52,9 @@ jobs:
           echo "Next release version: ${VERSION}"
 
   publish:
-    name: Publish (${{ matrix.arch }})
+    name: Publish (Apple Silicon)
     needs: version
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Native ARM on macos-latest — omit --target so binary lands in target/release/
-          - platform: macos-latest
-            arch: aarch64
-            args: ''
-          - platform: macos-latest
-            arch: x86_64
-            args: --target x86_64-apple-darwin
-    runs-on: ${{ matrix.platform }}
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
 
@@ -69,14 +70,13 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-apple-darwin
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: ./src-tauri -> target
-          key: ${{ matrix.arch }}
+          shared-key: tauri-macos
+          cache-on-failure: true
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -93,14 +93,17 @@ jobs:
           tagName: v__VERSION__
           releaseName: CO Messenger v__VERSION__
           releaseBody: |
-            Automated macOS build from `main` (ad-hoc signed, **not** notarized).
+            Automated macOS (Apple Silicon) build from `main` (ad-hoc signed, **not** notarized).
 
             ### Install
-            1. Download the `.dmg` for your Mac (Apple Silicon = `aarch64`, Intel = `x86_64`).
-            2. Open the disk image and drag **CO Messenger** to Applications.
+            1. Download the `.dmg` and open it.
+            2. Drag **CO Messenger** to Applications.
             3. If Gatekeeper blocks it: **right-click → Open** → confirm **Open**.
+            4. If that doesn’t show an **Open** option:
+               - Open **System Settings → Privacy & Security**.
+               - Scroll to the message about CO Messenger being blocked.
+               - Click **Open Anyway**, then confirm.
 
             Network and Keychain are enabled by default in this build.
           releaseDraft: false
           prerelease: true
-          args: ${{ matrix.args }}
