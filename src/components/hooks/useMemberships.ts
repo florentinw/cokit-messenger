@@ -3,12 +3,12 @@ import {
   collectLocalMemberships,
   isSidebarMembership,
   localMembershipStateFor,
-} from "../../lib/messenger";
+} from "@/lib/messenger";
 import {
   LocalMembershipState,
   type LocalMembership,
   type LocalMemberships,
-} from "../../lib/co-sdk-extras";
+} from "@/lib/co-sdk/identity";
 
 /** Load and stabilize the LocalMembership list for the sidebar. */
 export function useMemberships(

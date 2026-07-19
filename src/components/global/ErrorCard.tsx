@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { Button } from "./Button";
-import { Icon } from "./icons/Icon";
-import { RESET_LOCAL_DATA_HINT } from "../../lib/messenger";
+import { Button } from "@/components/global/Button";
+import { Icon } from "@/components/global/icons/Icon";
+import { RESET_LOCAL_DATA_HINT } from "@/lib/messenger";
 
 type Props = {
   title: string;

@@ -1,12 +1,14 @@
-import { CID } from "multiformats/cid";
 import {
-  DagList,
+  CID,
   getCoTip,
-  LocalMembershipState,
   resolveCid,
+} from "@/lib/co-sdk/co";
+import {
+  LocalMembershipState,
   type Did,
   type LocalMembership,
-} from "../co-sdk-extras";
+} from "@/lib/co-sdk/identity";
+import { DagList } from "@/lib/co-sdk/core";
 
 type DagNode = { n?: CID[]; l?: unknown[] };
 

@@ -1,5 +1,5 @@
-import { readProfileName } from "./profile";
-import { getPeerName } from "./peer-names";
+import { readProfileName } from "@/lib/messenger/profile";
+import { getPeerName } from "@/lib/messenger/peer-names";
 
 export function truncateDid(did: string, max = 22): string {
   if (did.length <= max) return did;

@@ -1,7 +1,7 @@
-import { cn } from "../../lib/utils";
-import { Button } from "../global/Button";
-import { GroupAvatar } from "../global/GroupAvatar";
-import type { ChatListRow } from "./chat-list-types";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/global/Button";
+import { GroupAvatar } from "@/components/global/GroupAvatar";
+import type { ChatListRow } from "@/components/sidebar/chat-list-types";
 
 type Props = {
   row: ChatListRow;

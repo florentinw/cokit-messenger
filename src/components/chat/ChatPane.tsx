@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  useCoTip,
-  useCore,
-  useCoSession,
-  resolveCid,
-} from "../../lib/co-sdk-extras";
+import { useCoTip, useCoSession, resolveCid } from "@/lib/co-sdk/co";
+import { useCore } from "@/lib/co-sdk/core";
 import {
   dateChipLabel,
   ensureRoomCore,
@@ -15,15 +11,15 @@ import {
   timelineFromEntry,
   useChatEntry,
   type RoomState,
-} from "../../lib/messenger";
-import { useOverflowHeaderBorder } from "../../lib/useOverflowHeaderBorder";
-import { cn } from "../../lib/utils";
-import { Composer } from "./Composer";
-import { GroupAvatar } from "../global/GroupAvatar";
-import { Button } from "../global/Button";
-import { Icon } from "../global/icons/Icon";
-import { MessageBubble, type MessageCluster } from "./MessageBubble";
-import { SystemEventBubble } from "./SystemEventBubble";
+} from "@/lib/messenger";
+import { useOverflowHeaderBorder } from "@/lib/useOverflowHeaderBorder";
+import { cn } from "@/lib/utils";
+import { Composer } from "@/components/chat/Composer";
+import { GroupAvatar } from "@/components/global/GroupAvatar";
+import { Button } from "@/components/global/Button";
+import { Icon } from "@/components/global/icons/Icon";
+import { MessageBubble, type MessageCluster } from "@/components/chat/MessageBubble";
+import { SystemEventBubble } from "@/components/chat/SystemEventBubble";
 
 type TimelineItem = ReturnType<typeof timelineFromEntry>[number];
 

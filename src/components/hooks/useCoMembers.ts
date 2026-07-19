@@ -3,13 +3,9 @@ import {
   activeDidsFromLocalMembership,
   collectCoMembers,
   localMembershipStateFor,
-} from "../../lib/messenger";
-import {
-  getSharedCoSession,
-  listenCoState,
-  LocalMembershipState,
-  type LocalMembership,
-} from "../../lib/co-sdk-extras";
+} from "@/lib/messenger";
+import { LocalMembershipState, type LocalMembership } from "@/lib/co-sdk/identity";
+import { getSharedCoSession, listenCoState } from "@/lib/co-sdk/co";
 
 /** Load CoMembers (active + pending) for the selected group CO. */
 export function useCoMembers(

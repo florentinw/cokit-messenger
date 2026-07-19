@@ -1,5 +1,8 @@
+import {
+  type CID,
+  listenCoState,
+} from "@/lib/co-sdk/co";
 import { useEffect, type MutableRefObject, type RefObject } from "react";
-import type { CID } from "multiformats";
 import {
   chatStore,
   displayName,
@@ -7,12 +10,8 @@ import {
   localMembershipStateFor,
   refreshChatFromCo,
   refreshChatsFromCo,
-} from "../../lib/messenger";
-import {
-  LocalMembershipState,
-  listenCoState,
-  type LocalMembership,
-} from "../../lib/co-sdk-extras";
+} from "@/lib/messenger";
+import { LocalMembershipState, type LocalMembership } from "@/lib/co-sdk/identity";
 
 /** Hydrate ChatStore for sidebar LocalMemberships (invites + active chats). */
 export function useChatHydration(

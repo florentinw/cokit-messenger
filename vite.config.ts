@@ -1,14 +1,23 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 import wasm from "vite-plugin-wasm";
 
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
+
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(() => ({
   plugins: [react(), tailwindcss(), svgr(), wasm()],
+  resolve: {
+    alias: {
+      "@": path.resolve(rootDir, "src"),
+    },
+  },
   clearScreen: false,
   server: {
     port: 1420,

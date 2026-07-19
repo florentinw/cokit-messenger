@@ -1,23 +1,23 @@
-import { useSyncExternalStore } from "react";
-import type { CID } from "multiformats";
 import {
-  getActions,
+  type CID,
   getCoTip,
   getSharedCoSession,
   invalidateSharedCoSession,
   resolveCid,
-} from "../co-sdk-extras";
-import type { GroupAvatarColor } from "./group-avatar";
-import { avatarColorFromCoTags, ingestDisplayNamesFromTags, nameFromCoTags } from "./tags";
+} from "@/lib/co-sdk/co";
+import { useSyncExternalStore } from "react";
+import { getActions } from "@/lib/co-sdk/core";
+import type { GroupAvatarColor } from "@/lib/messenger/group-avatar";
+import { avatarColorFromCoTags, ingestDisplayNamesFromTags, nameFromCoTags } from "@/lib/messenger/tags";
 import {
   extractTimelineItems,
   lastActivityFromTimeline,
   previewFromTimeline,
   textMessagesFromTimeline,
   type ChatTimelineItem,
-} from "./timeline";
-import { countUnreadMessages, getLastReadAt, markChatRead } from "./unread";
-import type { RoomState } from "./types";
+} from "@/lib/messenger/timeline";
+import { countUnreadMessages, getLastReadAt, markChatRead } from "@/lib/messenger/unread";
+import type { RoomState } from "@/lib/messenger/types";
 
 export type ChatStoreEntry = {
   coId: string;

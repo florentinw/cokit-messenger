@@ -6,7 +6,7 @@ Room / Matrix-style event model, group chat operations, profile & unread helpers
 
 - **LocalMembership** — my relationship to a CO (sidebar chats / invites). Helpers: `collectLocalMemberships`, `localMembershipStateFor`, `joinLocalMembership`, …
 - **CoMembers** — people on that CO (roster). Helpers: `collectCoMembers`, `inviteCoMember`, `removeCoMember`. COKIT wire actions still use `Participant*` discriminants.
-- Cores (`ROOM_CORE`, `LOCAL_MEMBERSHIP_CORE`, `CO_CORE`) are named reducers inside a CO; see `co-sdk-extras` `core/` for `pushAction` / `useCore`.
+- Cores (`ROOM_CORE`, `LOCAL_MEMBERSHIP_CORE`, `CO_CORE`) are named reducers inside a CO; see `@/lib/co-sdk/core` for `pushAction` / `useCore`.
 
 ## Data schema
 
@@ -21,7 +21,7 @@ It uses the built-in **co-messaging** cores that ship with `tauri-plugin-co-sdk`
 
 Same pattern as the [example todo app](https://github.com/1iolabs/example-cokit-todo-list) (core state + push actions), except messaging cores already exist. A custom `#[co]` crate is only needed for new domain types (e.g. Todo).
 
-`LocalMembership*` types come from `@1io/tauri-plugin-co-sdk` (via `co-sdk-extras`); room UI state is typed against the published `Room` schema.
+`LocalMembership*` types come from `@1io/tauri-plugin-co-sdk` (via `@/lib/co-sdk/identity`); room UI state is typed against the published `Room` schema (via `@/lib/co-sdk/co`).
 
 ## Modules
 

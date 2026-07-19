@@ -12,34 +12,31 @@ import {
   TAURI_REQUIRED_MESSAGE,
   truncateDid,
   useChatStoreRevision,
-} from "../lib/messenger";
+} from "@/lib/messenger";
 import {
   LOCAL_MEMBERSHIP_CORE,
   LocalMembershipState,
-  errorDetail,
-  formatCoError,
-  isTauriRuntimeAvailable,
-  useCoSession,
-  useCore,
   useIdentity,
   type LocalMemberships,
-} from "../lib/co-sdk-extras";
-import { ChatPane } from "./chat/ChatPane";
-import { ChatSidebar, type ChatListRow } from "./sidebar/ChatSidebar";
-import { GroupDetails } from "./chat-details/GroupDetails";
-import { IdentityLoadingScreen } from "./global/IdentityLoadingScreen";
-import { InviteAcceptPane } from "./chat/InviteAcceptPane";
-import { NewGroupPanel, type CreateDraft } from "./chat-details/NewGroupPanel";
-import { ProfilePanel } from "./global/ProfilePanel";
-import { CorruptStorageHint, ErrorCard } from "./global/ErrorCard";
-import { useMemberships } from "./hooks/useMemberships";
+} from "@/lib/co-sdk/identity";
+import { isTauriRuntimeAvailable, useCoSession } from "@/lib/co-sdk/co";
+import { useCore } from "@/lib/co-sdk/core";
+import { ChatPane } from "@/components/chat/ChatPane";
+import { ChatSidebar, type ChatListRow } from "@/components/sidebar/ChatSidebar";
+import { GroupDetails } from "@/components/chat-details/GroupDetails";
+import { IdentityLoadingScreen } from "@/components/global/IdentityLoadingScreen";
+import { InviteAcceptPane } from "@/components/chat/InviteAcceptPane";
+import { NewGroupPanel, type CreateDraft } from "@/components/chat-details/NewGroupPanel";
+import { ProfilePanel } from "@/components/global/ProfilePanel";
+import { CorruptStorageHint, ErrorCard } from "@/components/global/ErrorCard";
+import { useMemberships } from "@/components/hooks/useMemberships";
 import {
   useChatHydration,
   useChatStateMultiplexer,
-} from "./hooks/useChatPipeline";
-import { useCoMembers } from "./hooks/useCoMembers";
-import { useChatMutations } from "./hooks/useChatMutations";
-import { paneChatId, type Pane } from "./pane";
+} from "@/components/hooks/useChatPipeline";
+import { useCoMembers } from "@/components/hooks/useCoMembers";
+import { useChatMutations } from "@/components/hooks/useChatMutations";
+import { paneChatId, type Pane } from "@/components/pane";
 
 export function AppShell() {
   const { sessionId: localSession, error: sessionError } = useCoSession("local");
@@ -214,9 +211,9 @@ export function AppShell() {
     !bootstrappedRef.current && (!localSession || (!identity && !identityError));
 
   if (sessionError || identityError) {
+    const err = sessionError ?? identityError;
     const notInTauri = !isTauriRuntimeAvailable() && sessionError;
-    const formatted = formatCoError(sessionError ?? identityError);
-    const isCorruptStorage = formatted.type === "corrupt_storage";
+    const isCorruptStorage = err?.type === "corrupt_storage";
     const errorTitle = notInTauri
       ? "Open the desktop app"
       : isCorruptStorage
@@ -224,17 +221,15 @@ export function AppShell() {
         : sessionError
           ? "Could not open local session"
           : "Could not load identity";
-    const rawMessage = sessionError
-      ? notInTauri
-        ? TAURI_REQUIRED_MESSAGE
-        : errorDetail(sessionError)
-      : errorDetail(identityError);
+    const rawMessage = notInTauri
+      ? TAURI_REQUIRED_MESSAGE
+      : (err?.detail ?? err?.message ?? "");
     const copyMessage = `${errorTitle}\n\n${rawMessage}${isCorruptStorage ? `\n\n${RESET_LOCAL_DATA_HINT}` : ""}`;
 
     return (
       <ErrorCard
         title={errorTitle}
-        message={formatted.summary}
+        message={err?.message}
         copyText={copyMessage}
         hint={isCorruptStorage ? <CorruptStorageHint /> : undefined}
         details={rawMessage}

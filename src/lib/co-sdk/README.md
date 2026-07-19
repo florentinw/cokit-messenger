@@ -15,9 +15,9 @@ Core              → named model inside a CO (push/get actions, core tip / stat
 CoMembers         → people on a CO (messenger helpers; COKIT wire still uses Participant* actions)
 ```
 
-- App / messenger / component code must import from `src/lib/co-sdk-extras` —
-  **not** from `@1io/tauri-plugin-co-sdk` directly.
-- Only modules under this folder may import `@1io/tauri-plugin-co-sdk`.
+- App / messenger / component code must import from `@/lib/co-sdk/identity`, `@/lib/co-sdk/co`, or
+  `@/lib/co-sdk/core` — **not** from `@1io/tauri-plugin-co-sdk` or `multiformats` directly.
+- Only modules under this folder may import those packages.
 - Messenger domain (rooms, timeline, chat-store) stays in `src/lib/messenger/`.
 
 ### Folders
@@ -25,18 +25,14 @@ CoMembers         → people on a CO (messenger helpers; COKIT wire still uses P
 | Path | Role |
 |------|------|
 | `identity/` | `createIdentity`, `useIdentity`, `LocalMembership*` aliases, `KeystoreKey` |
-| `co/` | session cache, `useCoTip` / `useCo`, `listenCoState`, `resolveCid`, `createCo` |
+| `co/` | session cache, `useCoTip` / `useCo`, `listenCoState`, `resolveCid`, `createCo`, `CID`, `CoOperationError` |
 | `core/` | `pushAction` / `getActions`, `useCoreTip` / `useCore`, `DagList` |
-| `errors/` | `formatCoError`, `CoErrorType` |
 
 ### Upstream gap candidates
 
 - Shared session cache (`getSharedCoSession`)
-- Error formatting with `type` (`formatCoError`)
+- Typed operation errors (`CoOperationError` with `type` / summary / `detail`)
 - SWR hooks: tip vs decoded data for CO (`useCoTip` / `useCo`) and Core (`useCoreTip` / `useCore`)
 - Clearer names vs SDK (`LocalMembership` vs `Membership`)
-
-The public surface is the explicit named exports in `index.ts`. Every exported
-function documents `@param` / `@returns` on the defining module.
 
 **Note:** `@1io/compare` is not on the public npm registry; we vendor a minimal stub under `vendor/compare` so installs work outside the 1io intranet.

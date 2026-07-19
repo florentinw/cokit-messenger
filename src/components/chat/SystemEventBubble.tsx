@@ -5,11 +5,11 @@ import {
   subscribePeerNames,
   systemEventTextParts,
   type SystemTimelineEvent,
-} from "../../lib/messenger";
-import SystemEditIcon from "../global/icons/svgs/system-edit.svg?react";
-import SystemMemberAddedIcon from "../global/icons/svgs/system-member-added.svg?react";
-import SystemMemberRemovedIcon from "../global/icons/svgs/system-member-removed.svg?react";
-import SystemPlusIcon from "../global/icons/svgs/system-plus.svg?react";
+} from "@/lib/messenger";
+import SystemEditIcon from "@/components/global/icons/svgs/system-edit.svg?react";
+import SystemMemberAddedIcon from "@/components/global/icons/svgs/system-member-added.svg?react";
+import SystemMemberRemovedIcon from "@/components/global/icons/svgs/system-member-removed.svg?react";
+import SystemPlusIcon from "@/components/global/icons/svgs/system-plus.svg?react";
 
 const icons = {
   group_created: SystemPlusIcon,

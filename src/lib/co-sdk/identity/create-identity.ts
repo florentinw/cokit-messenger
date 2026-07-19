@@ -1,7 +1,7 @@
 import {
   createIdentity as sdkCreateIdentity,
 } from "@1io/tauri-plugin-co-sdk";
-import { assertTauriRuntime } from "../co/runtime";
+import { assertTauriRuntime } from "@/lib/co-sdk/co";
 
 /**
  * Create (or return) a named did:key identity in the local keystore.

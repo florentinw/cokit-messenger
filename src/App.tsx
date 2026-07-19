@@ -1,6 +1,6 @@
 import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
-import { AppShell } from "./components/AppShell";
-import { ErrorCard } from "./components/global/ErrorCard";
+import { AppShell } from "@/components/AppShell";
+import { ErrorCard } from "@/components/global/ErrorCard";
 
 function fullErrorText(error: unknown): string {
   if (error instanceof Error) {

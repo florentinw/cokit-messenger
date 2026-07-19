@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { CID } from "multiformats";
-import { resolveCid } from "../co/invoke";
-import { useCoSession, useCoTip, useResolveCid } from "../co/hooks";
+import { resolveCid, useCoSession, useCoTip, useResolveCid } from "@/lib/co-sdk/co";
 
 function headsKey(heads: CID[] | undefined): string {
   return heads?.map((h) => h.toString()).join("\0") ?? "";

@@ -5,8 +5,8 @@ import {
   Modal,
   ModalOverlay,
 } from "react-aria-components";
-import { Button } from "./Button";
-import { Icon } from "./icons/Icon";
+import { Button } from "@/components/global/Button";
+import { Icon } from "@/components/global/icons/Icon";
 
 type Props = {
   isOpen: boolean;

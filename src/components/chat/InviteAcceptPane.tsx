@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { displayName, truncateDid, useChatEntry } from "../../lib/messenger";
-import { Button } from "../global/Button";
-import { GroupAvatar } from "../global/GroupAvatar";
+import { displayName, truncateDid, useChatEntry } from "@/lib/messenger";
+import { Button } from "@/components/global/Button";
+import { GroupAvatar } from "@/components/global/GroupAvatar";
 
 type Props = {
   coId: string;

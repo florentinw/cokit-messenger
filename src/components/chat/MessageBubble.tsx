@@ -3,8 +3,8 @@ import {
   displayName,
   getPeerNamesRevision,
   subscribePeerNames,
-} from "../../lib/messenger";
-import { cn } from "../../lib/utils";
+} from "@/lib/messenger";
+import { cn } from "@/lib/utils";
 
 export type MessageCluster = "standalone" | "first" | "middle" | "last";
 

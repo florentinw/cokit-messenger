@@ -1,6 +1,6 @@
 /** Messenger / room-core domain types. */
 
-import type { Room } from "../co-sdk-extras";
+import type { Room } from "@/lib/co-sdk/co";
 
 /** Built-in CO container core (tags + CoMember wire actions). */
 export const CO_CORE = "co";

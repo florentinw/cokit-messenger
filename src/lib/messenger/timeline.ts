@@ -1,5 +1,5 @@
-import { displayName } from "./format";
-import { CO_CORE, type MatrixEvent, type RoomSystemEvent } from "./types";
+import { displayName } from "@/lib/messenger/format";
+import { CO_CORE, type MatrixEvent, type RoomSystemEvent } from "@/lib/messenger/types";
 
 /**
  * COKIT stores reducer actions with short CBOR keys (`f`/`t`/`c`/`p`).

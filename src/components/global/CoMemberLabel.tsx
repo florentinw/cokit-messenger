@@ -4,8 +4,8 @@ import {
   getPeerNamesRevision,
   subscribePeerNames,
   truncateDid,
-} from "../../lib/messenger";
-import { cn } from "../../lib/utils";
+} from "@/lib/messenger";
+import { cn } from "@/lib/utils";
 
 type Props = {
   did: string;
