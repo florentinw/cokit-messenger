@@ -34,7 +34,7 @@ pub async fn run() {
 		co_settings = co_settings.with_path(&path);
 	}
 
-	tauri::Builder::default()
+	let builder = tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.plugin(tauri_plugin_co_sdk::init(co_settings).await)
 		.setup(|app| {
@@ -55,7 +55,19 @@ pub async fn run() {
 			}
 
 			Ok(())
-		})
+		});
+
+	// macOS: Cmd+W / the red traffic light close the window and would otherwise
+	// quit a single-window app. Minimize instead; Cmd+Q still quits.
+	#[cfg(target_os = "macos")]
+	let builder = builder.on_window_event(|window, event| {
+		if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+			let _ = window.minimize();
+			api.prevent_close();
+		}
+	});
+
+	builder
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }
