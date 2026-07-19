@@ -18,6 +18,7 @@ import {
   CO_TAG_GROUP_NAME,
   CO_TAG_INVITER_DID,
   CO_TAG_INVITER_NAME,
+  CO_TAG_PROFILE_NAME,
   displayNameTagKey,
 } from "@/lib/messenger/types";
 
@@ -248,6 +249,33 @@ export async function inviteDisplayMetaFromLocalMembership(
   if (inviterDid && inviterName) rememberPeerName(inviterDid, inviterName);
 
   return { inviterDid, inviterName };
+}
+
+/** Read this user’s profile display name from the local CO tags. */
+export async function profileNameFromLocalCo(session: string): Promise<string> {
+  const [stateCid] = await getCoTip("local");
+  if (!stateCid) return "";
+  const co = (await resolveCid(session, stateCid)) as { t?: unknown };
+  let name = "";
+  for (const [key, value] of iterTagEntries(co.t)) {
+    if (key !== CO_TAG_PROFILE_NAME) continue;
+    const text = tagValueAsString(value)?.trim();
+    if (text) name = text;
+  }
+  return name;
+}
+
+/** Persist this user’s profile display name on the local CO. */
+export async function setLocalCoProfileName(
+  session: string,
+  identity: Did,
+  displayNameValue: string,
+): Promise<void> {
+  const trimmed = displayNameValue.trim();
+  if (!trimmed) return;
+  await upsertCoTag(session, identity, "local", CO_TAG_PROFILE_NAME, trimmed, {
+    skipIfUnchanged: true,
+  });
 }
 
 /** Persist group name on CO tags (visible after join / to active members). */

@@ -1,8 +1,8 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import {
   readProfileName,
+  subscribeProfileName,
   truncateDid,
-  writeProfileName,
 } from "@/lib/messenger";
 import { useOverflowHeaderBorder } from "@/lib/useOverflowHeaderBorder";
 import { Button } from "@/components/global/Button";
@@ -15,26 +15,40 @@ import { Icon } from "@/components/global/icons/Icon";
 type Props = {
   identity?: string;
   onClose: () => void;
-  onSaved?: (name: string) => void;
+  onSave?: (name: string) => void | Promise<void>;
 };
 
-export function ProfilePanel({ identity, onClose, onSaved }: Props) {
-  const [name, setName] = useState(readProfileName);
-  const [storedName, setStoredName] = useState(readProfileName);
+export function ProfilePanel({ identity, onClose, onSave }: Props) {
+  const storedName = useSyncExternalStore(
+    subscribeProfileName,
+    readProfileName,
+    () => "",
+  );
+  const [name, setName] = useState(storedName);
+  const [draftDirty, setDraftDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const trimmed = name.trim();
-  const canSave = trimmed.length > 0 && trimmed !== storedName;
+  const canSave = !saving && trimmed.length > 0 && trimmed !== storedName;
   const scrollRef = useRef<HTMLFormElement>(null);
   const headerBorder = useOverflowHeaderBorder(scrollRef, name);
 
-  function onSubmit(e: FormEvent) {
+  useEffect(() => {
+    if (!draftDirty) setName(storedName);
+  }, [storedName, draftDirty]);
+
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!trimmed) return;
-    writeProfileName(trimmed);
-    setStoredName(trimmed);
-    onSaved?.(trimmed);
-    setSavedFlash(true);
-    window.setTimeout(() => setSavedFlash(false), 1500);
+    if (!trimmed || saving) return;
+    setSaving(true);
+    try {
+      await onSave?.(trimmed);
+      setDraftDirty(false);
+      setSavedFlash(true);
+      window.setTimeout(() => setSavedFlash(false), 1500);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -50,7 +64,7 @@ export function ProfilePanel({ identity, onClose, onSaved }: Props) {
             variant="primary"
             isDisabled={!canSave}
           >
-            {savedFlash ? "Saved" : "Save changes"}
+            {savedFlash ? "Saved" : saving ? "Saving…" : "Save changes"}
           </Button>
         }
       />
@@ -80,7 +94,10 @@ export function ProfilePanel({ identity, onClose, onSaved }: Props) {
           <input
             autoFocus
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setDraftDirty(true);
+              setName(e.target.value);
+            }}
             placeholder="Your name"
             className="type-body input-pill input-pill-focus placeholder:text-muted"
           />
