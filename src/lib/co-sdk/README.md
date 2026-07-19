@@ -35,8 +35,4 @@ CoMembers         → people on a CO (messenger helpers; COKIT wire still uses P
 - SWR hooks: tip vs decoded data for CO (`useCoTip` / `useCo`) and Core (`useCoreTip` / `useCore`)
 - Clearer names vs SDK (`LocalMembership` vs `Membership`)
 
-Public imports use `@/lib/co-sdk/identity`, `@/lib/co-sdk/co`, and `@/lib/co-sdk/core`
-(via the `@/*` → `src/*` alias). Every exported function documents `@param` / `@returns`
-on the defining module.
-
 **Note:** `@1io/compare` is not on the public npm registry; we vendor a minimal stub under `vendor/compare` so installs work outside the 1io intranet.
