@@ -10,7 +10,7 @@ type Props = {
   onInvite: (inviteeDid: string) => Promise<void>;
 };
 
-export function InviteParticipantDialog({
+export function InviteCoMemberDialog({
   open,
   identity,
   onClose,
@@ -55,7 +55,7 @@ export function InviteParticipantDialog({
       onOpenChange={(next) => {
         if (!next && !inviting) onClose();
       }}
-      title="Invite participant"
+      title="Invite member"
       isDismissable={!inviting}
     >
       <form onSubmit={(e) => void onSubmit(e)} className="p-4">

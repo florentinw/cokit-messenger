@@ -1,14 +1,14 @@
 import { CID } from "multiformats/cid";
 import { v4 as uuid } from "uuid";
 import {
-  CO_CORE_NAME_MEMBERSHIP,
+  LOCAL_MEMBERSHIP_CORE,
   createCo,
-  getCoState,
+  getCoTip,
   getSharedCoSession,
   pushAction,
   resolveCid,
   type Did,
-  type MembershipsAction,
+  type LocalMembershipAction,
 } from "../co-sdk-extras";
 import { type GroupAvatarColor } from "./group-avatar";
 import { readProfileName } from "./profile";
@@ -19,9 +19,9 @@ import {
   setCoMemberDisplayName,
 } from "./tags";
 import {
-  CO_CORE_NAME_CO,
-  CO_CORE_NAME_ROOM,
-  ROOM_CORE_CID,
+  CO_CORE,
+  ROOM_CORE,
+  ROOM_CORE_BINARY_CID,
   type MatrixEvent,
 } from "./types";
 
@@ -46,13 +46,13 @@ export async function createGroupChat(
 }
 
 export async function ensureRoomCore(session: string, identity: Did): Promise<void> {
-  const binary = CID.parse(ROOM_CORE_CID);
+  const binary = CID.parse(ROOM_CORE_BINARY_CID);
   await pushAction(
     session,
-    CO_CORE_NAME_CO,
+    CO_CORE,
     {
       CoreCreate: {
-        core: CO_CORE_NAME_ROOM,
+        core: ROOM_CORE,
         binary,
         tags: [["type", "room"]],
       },
@@ -74,7 +74,7 @@ export async function setRoomName(
     type: "room_name",
     content: { name },
   };
-  await pushAction(session, CO_CORE_NAME_ROOM, event, identity);
+  await pushAction(session, ROOM_CORE, event, identity);
 }
 
 export async function renameGroupChat(
@@ -109,7 +109,7 @@ export async function sendTextMessage(
     type: "m_room_message",
     content: { msgtype: "text", body },
   };
-  const cid = await pushAction(session, CO_CORE_NAME_ROOM, event, identity);
+  const cid = await pushAction(session, ROOM_CORE, event, identity);
   if (cid === undefined) {
     throw new Error(
       `Failed to send message to ${roomId}. The room session may be closed or the room core is unavailable.`,
@@ -117,13 +117,13 @@ export async function sendTextMessage(
   }
 }
 
-export async function joinMembership(
+export async function joinLocalMembership(
   localSession: string,
   identity: Did,
   coId: string,
 ): Promise<void> {
-  const action: MembershipsAction = { Join: { id: coId, did: identity } };
-  await pushAction(localSession, CO_CORE_NAME_MEMBERSHIP, action, identity);
+  const action: LocalMembershipAction = { Join: { id: coId, did: identity } };
+  await pushAction(localSession, LOCAL_MEMBERSHIP_CORE, action, identity);
   try {
     const profile = readProfileName();
     if (profile) {
@@ -135,8 +135,8 @@ export async function joinMembership(
   }
 }
 
-/** Invite via group `ParticipantInvite` (DidComm → invitee’s local membership). */
-export async function inviteParticipant(
+/** Invite a CoMember via wire `ParticipantInvite` (DidComm → invitee’s LocalMembership). */
+export async function inviteCoMember(
   inviterDid: Did,
   coId: string,
   inviteeDid: Did,
@@ -146,7 +146,7 @@ export async function inviteParticipant(
   // Keep group display tags on the CO for active members (after join).
   // Stock COKIT does not persist these onto the invitee’s pending membership.
   try {
-    const [stateCid] = await getCoState(coId);
+    const [stateCid] = await getCoTip(coId);
     if (stateCid) {
       const co = (await resolveCid(session, stateCid)) as { n?: string; t?: unknown };
       if (!nameFromCoTags(co.t)) {
@@ -164,7 +164,7 @@ export async function inviteParticipant(
 
   const cid = await pushAction(
     session,
-    CO_CORE_NAME_CO,
+    CO_CORE,
     {
       ParticipantInvite: {
         participant: inviteeDid,
@@ -181,10 +181,10 @@ export async function inviteParticipant(
 }
 
 /**
- * Revoke a pending invite via group `ParticipantRemove`.
+ * Revoke a pending CoMember invite via wire `ParticipantRemove`.
  * COKIT moves Invite → Inactive (Pending entries are deleted).
  */
-export async function revokeInvite(
+export async function revokeCoMemberInvite(
   actorDid: Did,
   coId: string,
   inviteeDid: Did,
@@ -192,7 +192,7 @@ export async function revokeInvite(
   const session = await getSharedCoSession(coId);
   const cid = await pushAction(
     session,
-    CO_CORE_NAME_CO,
+    CO_CORE,
     {
       ParticipantRemove: {
         participant: inviteeDid,
@@ -217,10 +217,10 @@ export async function acceptInvite(
   // once the peer handshake finishes. Opening the group CO before Active fails
   // with "No active membership". (Docs mention ChangeMembershipState, but the
   // membership core only accepts InviteAccept.)
-  const action: MembershipsAction = {
+  const action: LocalMembershipAction = {
     InviteAccept: { id: coId, did: identity },
   };
-  await pushAction(localSession, CO_CORE_NAME_MEMBERSHIP, action, identity);
+  await pushAction(localSession, LOCAL_MEMBERSHIP_CORE, action, identity);
 }
 
 /** Decline a pending group invite (remove self from membership before accepting). */
@@ -229,21 +229,21 @@ export async function declineInvite(
   identity: Did,
   coId: string,
 ): Promise<void> {
-  const action: MembershipsAction = { Remove: { id: coId, did: identity } };
-  await pushAction(localSession, CO_CORE_NAME_MEMBERSHIP, action, identity);
+  const action: LocalMembershipAction = { Remove: { id: coId, did: identity } };
+  await pushAction(localSession, LOCAL_MEMBERSHIP_CORE, action, identity);
 }
 
-export async function leaveMembership(
+export async function leaveLocalMembership(
   localSession: string,
   identity: Did,
   coId: string,
 ): Promise<void> {
   // Remove from the shared group roster first (while we can still write to the CO).
-  // Timeline “left the group” events are derived from this ParticipantRemove action.
+  // Timeline “left the group” events are derived from wire ParticipantRemove.
   const roomSession = await getSharedCoSession(coId);
   const removed = await pushAction(
     roomSession,
-    CO_CORE_NAME_CO,
+    CO_CORE,
     {
       ParticipantRemove: {
         participant: identity,
@@ -254,28 +254,28 @@ export async function leaveMembership(
   );
   if (removed === undefined) {
     throw new Error(
-      `Failed to leave ${coId}. Could not update group participants.`,
+      `Failed to leave ${coId}. Could not update group members.`,
     );
   }
 
-  // Drop our local membership so the chat leaves the sidebar.
-  const action: MembershipsAction = { Deactivate: { id: coId, did: identity } };
-  await pushAction(localSession, CO_CORE_NAME_MEMBERSHIP, action, identity);
+  // Drop our LocalMembership so the chat leaves the sidebar.
+  const action: LocalMembershipAction = { Deactivate: { id: coId, did: identity } };
+  await pushAction(localSession, LOCAL_MEMBERSHIP_CORE, action, identity);
 }
 
-export async function removeParticipant(
+export async function removeCoMember(
   actorDid: Did,
   coId: string,
-  participantDid: Did,
+  memberDid: Did,
 ): Promise<void> {
   // Roster + “removed from the group” timeline events come from the group CO.
   const session = await getSharedCoSession(coId);
   const cid = await pushAction(
     session,
-    CO_CORE_NAME_CO,
+    CO_CORE,
     {
       ParticipantRemove: {
-        participant: participantDid,
+        participant: memberDid,
         tags: [],
       },
     },
@@ -283,7 +283,7 @@ export async function removeParticipant(
   );
   if (cid === undefined) {
     throw new Error(
-      `Failed to remove ${participantDid} from ${coId}. The group session may be closed.`,
+      `Failed to remove ${memberDid} from ${coId}. The group session may be closed.`,
     );
   }
 }

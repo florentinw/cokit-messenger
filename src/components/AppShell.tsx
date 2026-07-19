@@ -6,7 +6,7 @@ import {
   formatChatTime,
   IDENTITY_NAME,
   markChatRead,
-  membershipStateFor,
+  localMembershipStateFor,
   publishDisplayNameToGroups,
   RESET_LOCAL_DATA_HINT,
   TAURI_REQUIRED_MESSAGE,
@@ -14,17 +14,15 @@ import {
   useChatStoreRevision,
 } from "../lib/messenger";
 import {
-  CO_CORE_NAME_MEMBERSHIP,
-  MembershipState,
+  LOCAL_MEMBERSHIP_CORE,
+  LocalMembershipState,
   errorDetail,
   formatCoError,
   isTauriRuntimeAvailable,
-  useCo,
-  useCoreTipCid,
   useCoSession,
-  useDidKeyIdentity,
-  useResolveCid,
-  type Memberships,
+  useCore,
+  useIdentity,
+  type LocalMemberships,
 } from "../lib/co-sdk-extras";
 import { ChatPane } from "./chat/ChatPane";
 import { ChatSidebar, type ChatListRow } from "./sidebar/ChatSidebar";
@@ -39,25 +37,14 @@ import {
   useChatHydration,
   useChatStateMultiplexer,
 } from "./hooks/useChatPipeline";
-import { useGroupRoster } from "./hooks/useGroupRoster";
+import { useCoMembers } from "./hooks/useCoMembers";
 import { useChatMutations } from "./hooks/useChatMutations";
 import { paneChatId, type Pane } from "./pane";
 
 export function AppShell() {
   const { sessionId: localSession, error: sessionError } = useCoSession("local");
-  const { identity, error: identityError } = useDidKeyIdentity(IDENTITY_NAME, localSession);
-  const [localCoCid, localHeads] = useCo("local");
-  const membershipCoreCid = useCoreTipCid(
-    localCoCid,
-    CO_CORE_NAME_MEMBERSHIP,
-    localSession,
-    localHeads,
-  );
-  const membershipsState = useResolveCid<Memberships>(
-    membershipCoreCid,
-    localSession,
-    localHeads,
-  );
+  const { identity, error: identityError } = useIdentity(IDENTITY_NAME, localSession);
+  const membershipsState = useCore<LocalMemberships>("local", LOCAL_MEMBERSHIP_CORE);
 
   const [pane, setPane] = useState<Pane>({ kind: "empty" });
   const [createDraft, setCreateDraft] = useState<CreateDraft>({
@@ -101,7 +88,7 @@ export function AppShell() {
   useChatStateMultiplexer(activeIdsRef, selectedIdRef, identityRef);
 
   const selectedMembership = memberships.find((m) => m.id === focusedId);
-  const { selectedParticipants, selectedPendingInvites, bumpRoster } = useGroupRoster(
+  const { selectedMembers, selectedPendingInvites, bumpRoster } = useCoMembers(
     focusedId,
     identity,
     selectedMembership,
@@ -111,7 +98,7 @@ export function AppShell() {
   const {
     onCreate,
     onLeave,
-    onRemoveParticipant,
+    onRemoveCoMember,
     onRevokeInvite,
     onInvite,
     onMessagesSeen,
@@ -142,10 +129,10 @@ export function AppShell() {
     const chats: { row: ChatListRow; timestamp: number }[] = [];
 
     for (const m of source) {
-      const state = membershipStateFor(m, identity);
-      const invited = state === MembershipState.Invite;
+      const state = localMembershipStateFor(m, identity);
+      const invited = state === LocalMembershipState.Invite;
       const joining =
-        state === MembershipState.Join || state === MembershipState.Pending;
+        state === LocalMembershipState.Join || state === LocalMembershipState.Pending;
       const meta = chatStore.get(m.id);
       const resolvedName =
         meta?.name && meta.name !== "Group chat" && meta.name !== m.id
@@ -214,12 +201,12 @@ export function AppShell() {
       inviteRows.find((c) => c.id === focusedId)?.title)
     : undefined;
   const selectedMembershipState = selectedMembership
-    ? membershipStateFor(selectedMembership, identity)
+    ? localMembershipStateFor(selectedMembership, identity)
     : undefined;
-  const selectedIsInvite = selectedMembershipState === MembershipState.Invite;
+  const selectedIsInvite = selectedMembershipState === LocalMembershipState.Invite;
   const selectedIsJoining =
-    selectedMembershipState === MembershipState.Join ||
-    selectedMembershipState === MembershipState.Pending;
+    selectedMembershipState === LocalMembershipState.Join ||
+    selectedMembershipState === LocalMembershipState.Pending;
 
   const bootstrappedRef = useRef(false);
   if (localSession && identity) bootstrappedRef.current = true;
@@ -328,11 +315,11 @@ export function AppShell() {
               key={focusedId}
               coId={focusedId}
               identity={identity}
-              participants={selectedParticipants}
+              members={selectedMembers}
               pendingInvites={selectedPendingInvites}
               onClose={() => setPane({ kind: "chat", id: focusedId })}
               onLeave={onLeave}
-              onRemoveParticipant={onRemoveParticipant}
+              onRemoveCoMember={onRemoveCoMember}
               onInvite={onInvite}
               onRevokeInvite={onRevokeInvite}
               onSave={onSaveGroupDetails}

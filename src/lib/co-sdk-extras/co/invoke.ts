@@ -1,51 +1,22 @@
 import {
   createCo as sdkCreateCo,
-  createIdentity as sdkCreateIdentity,
   getActions as sdkGetActions,
-  getCoState as sdkGetCoState,
+  getCoState as sdkGetCoTip,
   pushAction as sdkPushAction,
   resolveCid as sdkResolveCid,
   sessionClose as sdkSessionClose,
   sessionOpen as sdkSessionOpen,
   type GetActionsResponse,
 } from "@1io/tauri-plugin-co-sdk";
-import { isTauri } from "@tauri-apps/api/core";
 import type { CID } from "multiformats";
-import { CoOperationError, formatCoError } from "./errors";
-
-/** Thrown when IPC is invoked outside a Tauri webview (not exported — UI copy lives in messenger). */
-const TAURI_REQUIRED_MESSAGE =
-  "This app must run inside a Tauri desktop window, not a normal browser tab.";
-
-/** Set after the first successful Tauri check so later IPC skips the probe. */
-let tauriRuntimeReady = false;
-
-/**
- * True when the page is running under Tauri with a working `invoke` bridge.
- *
- * @returns `true` if Tauri + `__TAURI_INTERNALS__.invoke` are available
- */
-export function isTauriRuntimeAvailable(): boolean {
-  return (
-    isTauri() &&
-    typeof (window as Window & { __TAURI_INTERNALS__?: { invoke?: unknown } })
-      .__TAURI_INTERNALS__?.invoke === "function"
-  );
-}
-
-function assertTauriRuntime() {
-  if (tauriRuntimeReady) return;
-  if (!isTauriRuntimeAvailable()) {
-    throw new Error(TAURI_REQUIRED_MESSAGE);
-  }
-  tauriRuntimeReady = true;
-}
+import { CoOperationError, formatCoError } from "../errors";
+import { assertTauriRuntime } from "./runtime";
 
 /**
  * Open a CO session for `coId` (requires Tauri).
  * Prefer {@link getSharedCoSession} from app code.
  *
- * @param coId - CO document id to open
+ * @param coId - CO id to open
  * @returns Session id string for subsequent invoke calls
  */
 export async function sessionOpen(coId: string): Promise<string> {
@@ -66,14 +37,14 @@ export async function sessionClose(sessionId: string): Promise<void> {
 }
 
 /**
- * Read the current tip CID and heads for a CO document.
+ * Read the current tip CID and heads for a CO.
  *
- * @param co - CO document id (e.g. `"local"` or a group co id)
+ * @param coId - CO id (e.g. `"local"` or a group co id)
  * @returns Tuple of `[tipCid | undefined, heads]`
  */
-export async function getCoState(co: string): Promise<[CID | undefined, CID[]]> {
+export async function getCoTip(coId: string): Promise<[CID | undefined, CID[]]> {
   assertTauriRuntime();
-  return await sdkGetCoState(co);
+  return await sdkGetCoTip(coId);
 }
 
 /**
@@ -119,7 +90,7 @@ export async function resolveCid(session: string, cid: CID): Promise<unknown> {
  * @param heads - Head CIDs to walk from
  * @param count - Maximum number of actions to return
  * @param until - Optional CID to stop before (exclusive); pass `undefined` for no bound
- * @returns {@link GetActionsResponse} with action CIDs / paging metadata from the SDK
+ * @returns Action CIDs / paging metadata from the SDK
  */
 export async function getActions(
   session: string,
@@ -132,25 +103,13 @@ export async function getActions(
 }
 
 /**
- * Create (or return) a named did:key identity in the local keystore.
- *
- * @param name - Keystore entry name (e.g. `"messenger-identity"`)
- * @param seed - Optional entropy for deterministic key generation
- * @returns did:key string for the identity
- */
-export async function createIdentity(name: string, seed?: Uint8Array): Promise<string> {
-  assertTauriRuntime();
-  return await sdkCreateIdentity(name, seed);
-}
-
-/**
- * Create a new CO document owned by `creatorDid`.
+ * Create a new CO owned by `creatorDid`.
  *
  * @param creatorDid - Owner did:key
  * @param coName - Human-readable name for the new CO
  * @param isPublic - Whether the CO is public
  * @param coId - Optional fixed CO id; when omitted the SDK allocates one
- * @returns The new CO document id
+ * @returns The new CO id
  */
 export async function createCo(
   creatorDid: string,
