@@ -1,107 +1,39 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { CID } from "multiformats";
 import {
-  avatarColorFromCoTags,
-  chatStore,
-  getGroupAvatarColorRevision,
+  DEFAULT_GROUP_AVATAR_COLOR,
+  defaultGroupAvatarColor,
   GROUP_AVATAR_COLORS,
   GROUP_AVATAR_SRC,
-  readGroupAvatarColor,
-  subscribeGroupAvatarColors,
   useChatEntry,
   type GroupAvatarColor,
 } from "../../lib/messenger";
-import { useCo, useCoSession, resolveCid } from "../../lib/co-sdk";
 import { AppDialog } from "./AppDialog";
 import { Button } from "./Button";
+import { useState } from "react";
 
 type Props = {
   coId?: string;
-  /** Explicit color (create / draft picker / store). Wins over resolved CO tag. */
+  /** Explicit color (create / draft picker). Wins over ChatStore. */
   color?: string;
-  /**
-   * When false, skip opening the group CO (e.g. pending invites cannot sessionOpen).
-   * Color comes from ChatStore / local cache written during invite hydrate.
-   */
-  syncFromCo?: boolean;
   className?: string;
-  /** Extra classes on the butterfly image wrapper (padding). */
+  /** Extra classes on the group-avatar image wrapper (padding). */
   padClassName?: string;
 };
 
-function headsKey(heads: CID[] | undefined): string {
-  return heads?.map((h) => h.toString()).join("\0") ?? "";
-}
-
 /**
- * Optionally pull avatar color from CO tags into ChatStore (stale-guarded).
- * Display prefers store / props — this only feeds the store.
+ * Display color: prop → ChatStore → deterministic default.
+ * CO tags are written into ChatStore by `refreshChatFromCo` / hydrate — not here.
  */
-function useSyncAvatarColorIntoStore(
-  coId: string | undefined,
-  syncFromCo: boolean,
-): void {
-  const enabled = !!coId && syncFromCo;
-  const { sessionId } = useCoSession(enabled ? coId! : "local");
-  const [stateCid, heads] = useCo(enabled ? coId! : "local");
-  const loadGen = useRef(0);
-
-  useEffect(() => {
-    if (!enabled || !coId || !sessionId || stateCid === undefined) return;
-    const gen = ++loadGen.current;
-    const capturedLocalRevision = chatStore.get(coId)?.localRevision ?? 0;
-    let cancelled = false;
-
-    async function load() {
-      try {
-        if (!stateCid) return;
-        const co = (await resolveCid(sessionId!, stateCid)) as { t?: unknown };
-        if (cancelled || gen !== loadGen.current) return;
-        const fromTags = avatarColorFromCoTags(co.t);
-        if (fromTags) {
-          chatStore.applyRemote(coId!, { color: fromTags }, capturedLocalRevision);
-        }
-      } catch {
-        // keep store / cache as-is
-      }
-    }
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, coId, sessionId, stateCid, headsKey(heads)]);
-}
-
 export function GroupAvatar({
   coId,
   color,
-  syncFromCo = true,
   className = "size-12",
   padClassName = "p-[18%]",
 }: Props) {
-  const revision = useSyncExternalStore(
-    subscribeGroupAvatarColors,
-    getGroupAvatarColorRevision,
-    () => 0,
-  );
   const entry = useChatEntry(color ? undefined : coId);
-  useSyncAvatarColorIntoStore(color ? undefined : coId, syncFromCo);
-
-  // Prefer explicit prop → ChatStore → localStorage cache → default.
-  const [cached, setCached] = useState<GroupAvatarColor | undefined>(() =>
-    coId ? readGroupAvatarColor(coId) : undefined,
-  );
-  useEffect(() => {
-    if (!coId) {
-      setCached(undefined);
-      return;
-    }
-    setCached(readGroupAvatarColor(coId));
-  }, [coId, revision, entry?.color]);
-
   const background =
-    color ?? entry?.color ?? cached ?? GROUP_AVATAR_COLORS[0];
+    color ??
+    entry?.color ??
+    (coId ? defaultGroupAvatarColor(coId) : DEFAULT_GROUP_AVATAR_COLOR);
 
   return (
     <div
