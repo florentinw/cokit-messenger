@@ -109,7 +109,7 @@
   --layer-foreground: var(--color-warm-charcoal);
   --layer-separator: color-mix(
     in srgb,
-    transparent 82%,
+    transparent 90%,
     var(--color-warm-charcoal)
   );
   --interactive-mix-step: 2%;
@@ -128,7 +128,7 @@
     --layer-surface: transparent;
     --layer-muted: rgba(255, 255, 255, 0.55);
     --layer-foreground: var(--color-warm-white);
-    --layer-separator: rgba(255, 255, 255, 0.18);
+    --layer-separator: rgba(255, 255, 255, 0.1);
     --interactive-mix-step: 8%;
     --surface-selected: rgba(255, 255, 255, 0.08);
   }
