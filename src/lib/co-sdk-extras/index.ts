@@ -4,7 +4,8 @@
  *
  * Layers:
  * - **Identity** — did:key + LocalMembership (my relationship to a CO)
- * - **CO** — collaboration container + session/tip/actions/resolve
+ * - **CO** — collaboration container (session, tip, resolve root)
+ * - **Core** — named data models inside a CO (actions, core tip / state)
  *
  * Import from here — not from `@1io/tauri-plugin-co-sdk` directly.
  * Messenger domain logic stays in `src/lib/messenger/`.
@@ -25,22 +26,25 @@ export {
 export {
   isTauriRuntimeAvailable,
   getCoTip,
-  pushAction,
   resolveCid,
-  getActions,
   createCo,
   getSharedCoSession,
   invalidateSharedCoSession,
   listenCoState,
-  DagList,
   useCoSession,
   useCoTip,
-  useCoreTip,
   useResolveCid,
   useCo,
-  useCore,
   Room,
 } from "./co";
+
+export {
+  pushAction,
+  getActions,
+  useCoreTip,
+  useCore,
+  DagList,
+} from "./core";
 
 export {
   errorDetail,

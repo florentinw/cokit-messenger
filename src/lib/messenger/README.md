@@ -6,6 +6,7 @@ Room / Matrix-style event model, group chat operations, profile & unread helpers
 
 - **LocalMembership** — my relationship to a CO (sidebar chats / invites). Helpers: `collectLocalMemberships`, `localMembershipStateFor`, `joinLocalMembership`, …
 - **CoMembers** — people on that CO (roster). Helpers: `collectCoMembers`, `inviteCoMember`, `removeCoMember`. COKIT wire actions still use `Participant*` discriminants.
+- Cores (`ROOM_CORE`, `LOCAL_MEMBERSHIP_CORE`, `CO_CORE`) are named reducers inside a CO; see `co-sdk-extras` `core/` for `pushAction` / `useCore`.
 
 ## Data schema
 
