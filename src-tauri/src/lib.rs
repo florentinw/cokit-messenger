@@ -4,24 +4,29 @@ use tauri_plugin_co_sdk::library::co_application::CoApplicationSettings;
 
 const DISPLAY_NAME: &str = "CO Messenger";
 
+fn env_flag(name: &str) -> bool {
+	std::env::var(name)
+		.ok()
+		.as_deref()
+		.is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub async fn run() {
 	tauri::async_runtime::set(tokio::runtime::Handle::current());
 
 	macos_display_name::apply(DISPLAY_NAME);
 
-	// Network is opt-in: `with_network` always enables networking (arg is force_new_peer_id).
+	// Production defaults: network + keychain on.
+	// Dev scripts opt out with CO_DISABLE_NETWORK / CO_NO_KEYCHAIN (+ CO_BASE_PATH).
 	let mut co_settings = CoApplicationSettings::new("cokit-messenger");
 
-	if std::env::var("CO_ENABLE_NETWORK")
-		.ok()
-		.as_deref()
-		.is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-	{
+	if !env_flag("CO_DISABLE_NETWORK") {
+		// `with_network` argument is force_new_peer_id, not “enable”.
 		co_settings = co_settings.with_network(false);
 	}
 
-	if std::env::var("CO_NO_KEYCHAIN").ok().as_deref() != Some("false") {
+	if env_flag("CO_NO_KEYCHAIN") {
 		co_settings = co_settings.without_keychain();
 	}
 

@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import {
   readProfileName,
   truncateDid,
   writeProfileName,
 } from "../../lib/messenger";
 import { useOverflowHeaderBorder } from "../../lib/useOverflowHeaderBorder";
-import { cn } from "../../lib/utils";
 import { Button } from "./Button";
+import {
+  ContentPaneHeader,
+  ContentPaneShell,
+} from "./ContentPaneHeader";
 import { Icon } from "./icons/Icon";
 
 type Props = {
@@ -24,12 +27,6 @@ export function ProfilePanel({ identity, onClose, onSaved }: Props) {
   const scrollRef = useRef<HTMLFormElement>(null);
   const headerBorder = useOverflowHeaderBorder(scrollRef, name);
 
-  useEffect(() => {
-    const current = readProfileName();
-    setName(current);
-    setStoredName(current);
-  }, []);
-
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!trimmed) return;
@@ -41,31 +38,22 @@ export function ProfilePanel({ identity, onClose, onSaved }: Props) {
   }
 
   return (
-    <section className="content-pane layer-card relative flex h-full min-w-0 flex-1 flex-col">
-      <header
-        className={cn(
-          "flex h-12 shrink-0 items-center gap-2 bg-surface px-2.5",
-          headerBorder && "border-b border-separator",
-        )}
-      >
-        <Button variant="icon" onPress={onClose} aria-label="Back">
-          <Icon name="back" />
-        </Button>
-        <div
-          data-tauri-drag-region
-          className="flex min-w-0 flex-1 items-center self-stretch"
-        >
-          <h1 className="type-body text-foreground">Profile</h1>
-        </div>
-        <Button
-          type="submit"
-          form="profile-form"
-          variant="primary"
-          isDisabled={!canSave}
-        >
-          {savedFlash ? "Saved" : "Save changes"}
-        </Button>
-      </header>
+    <ContentPaneShell>
+      <ContentPaneHeader
+        title="Profile"
+        onBack={onClose}
+        bordered={headerBorder}
+        action={
+          <Button
+            type="submit"
+            form="profile-form"
+            variant="primary"
+            isDisabled={!canSave}
+          >
+            {savedFlash ? "Saved" : "Save changes"}
+          </Button>
+        }
+      />
 
       <form
         id="profile-form"
@@ -101,6 +89,6 @@ export function ProfilePanel({ identity, onClose, onSaved }: Props) {
           </p>
         </div>
       </form>
-    </section>
+    </ContentPaneShell>
   );
 }

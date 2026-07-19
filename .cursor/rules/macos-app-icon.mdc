@@ -1,0 +1,51 @@
+---
+description: macOS Dock icon workflow (Icon Composer → pad → tauri icon)
+globs: src-tauri/icons/**
+alwaysApply: false
+---
+
+# macOS app icon workflow
+
+Icon Composer has **no “safe area” setting**. Xcode adds macOS margins when compiling a `.icon` bundle; **Export → PNG** does not. Tauri only consumes PNGs / `.icns`, so raw Icon Composer exports look **too large in the Dock**.
+
+## Canonical source layout
+
+```
+src-tauri/icons/_base/
+  base.svg                          # optional vector source
+  macOS/
+    Icon.icon/                      # Icon Composer project (design source of truth)
+    Icon Exports/                   # File → Export from Icon Composer (1024 PNGs)
+    Icon-macOS-1024-padded.png      # generated: 824 content on 1024 canvas
+```
+
+Prefer **`Icon-iOS-Default-1024@1x.png`** (or Dark) from `Icon Exports/` as the unpadded export.
+
+## Required regenerate steps
+
+After updating Icon Composer exports:
+
+```bash
+pnpm icons:macos
+```
+
+That script:
+
+1. Reads the Default 1024 export from `Icon Exports/`
+2. Scales artwork into Apple’s **824×824** content box on a **1024×1024** transparent canvas (~100px margin)
+3. Writes `Icon-macOS-1024-padded.png`
+4. Runs `pnpm tauri icon` on the padded PNG → updates `src-tauri/icons/*` (icns, png, android, ios)
+
+Do **not** run `pnpm tauri icon` directly on unpadded Icon Composer exports for Dock use.
+
+## Do / don’t
+
+- **Do** design edge-to-edge in Icon Composer (normal).
+- **Do** use Grid in Icon Composer for alignment only — it is not the macOS Dock margin.
+- **Do** restart the app after regenerating; run `killall Dock` if the Dock caches the old icon.
+- **Don’t** bake rounded corners into the source — macOS applies the squircle.
+- **Don’t** commit `.DS_Store` under `_base/`.
+
+## Display name (related)
+
+Dock label **CO Messenger** comes from `productName` / `Info.plist`. Debug `pnpm tauri:dev` may still show the binary name `cokit-messenger` unless the dev display-name workaround is active — that is separate from icon size.

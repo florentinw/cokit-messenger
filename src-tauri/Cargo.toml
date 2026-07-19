@@ -2,7 +2,7 @@
 name = "cokit-messenger"
 version = "0.1.0"
 description = "CO Messenger (Tauri)"
-authors = ["you"]
+authors = ["CO Messenger"]
 edition = "2021"
 
 [lib]
@@ -17,10 +17,10 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri = { version = "2", features = ["macos-private-api"] }
 window-vibrancy = "0.6"
-tauri-plugin-co-sdk = { git = "https://github.com/1iolabs/cokit.git", branch = "main", version = "0.1.0" }
+tauri-plugin-co-sdk = { git = "https://github.com/1iolabs/cokit.git", rev = "049fece420c489a9a35ae2be8ca2e3bdf11eb04e" }
 tauri-plugin-opener = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
-# COKIT pulls `core2 = ^0.4.0` via multihash-codetable; 0.4.0 is yanked on crates.io.
+# COKIT pulls `core2` via multihash-codetable; all crates.io versions are yanked.
 [patch.crates-io]
-core2 = { path = "../vendor/core2-0.4.0" }
+core2 = { git = "https://github.com/bbqsrc/core2", rev = "545e84bcb0f235b12e21351e0c69767958efe2a7" }

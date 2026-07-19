@@ -4,32 +4,28 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { truncateDid, type GroupAvatarColor } from "../../lib/messenger";
+import {
+  readProfileName,
+  subscribeProfileName,
+  truncateDid,
+  type GroupAvatarColor,
+} from "../../lib/messenger";
 import { cn } from "../../lib/utils";
 import { Button } from "../global/Button";
 import { GroupAvatar } from "../global/GroupAvatar";
 import { EmptyState } from "./EmptyState";
 import { ChatListItem } from "./ChatListItem";
 import { Icon } from "../global/icons/Icon";
+import type { ChatListEntry } from "./chat-list-types";
 
-export type ChatListEntry = {
-  coId: string;
-  name: string;
-  preview?: string;
-  timestamp?: number;
-  unread?: number;
-  invited?: boolean;
-  joining?: boolean;
-  /** Inviter display name for pending invites. */
-  inviterName?: string;
-};
+export type { ChatListEntry } from "./chat-list-types";
 
 type Props = {
   chats: ChatListEntry[];
   selectedId?: string;
-  /** Draft “New Group” row while the create panel is open. */
   creating?: boolean;
   createDraftName?: string;
   createDraftColor?: GroupAvatarColor | string;
@@ -37,7 +33,6 @@ type Props = {
   onCreate: () => void;
   onOpenProfile?: () => void;
   identity?: string;
-  profileName?: string;
 };
 
 const SIDEBAR_WIDTH_KEY = "co-messenger.sidebar-width";
@@ -92,7 +87,7 @@ function NewGroupDraftItem({
       )}
       aria-label={title}
     >
-      <GroupAvatar color={color} className="size-12" syncFromCo={false} />
+      <GroupAvatar color={color} className="size-12" />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="type-body truncate text-foreground">{title}</span>
         <p className="h-9 min-w-0 line-clamp-2 type-body-regular text-muted">
@@ -113,13 +108,17 @@ export function ChatSidebar({
   onCreate,
   onOpenProfile,
   identity,
-  profileName,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const [width, setWidth] = useState(readStoredWidth);
   const [resizing, setResizing] = useState(false);
   const widthRef = useRef(width);
   widthRef.current = width;
+  const profileName = useSyncExternalStore(
+    subscribeProfileName,
+    readProfileName,
+    () => "",
+  );
 
   async function copyIdentity() {
     if (!identity) return;
@@ -190,7 +189,6 @@ export function ChatSidebar({
       className="sidebar-pane relative flex h-full shrink-0 flex-col border-r border-separator text-foreground"
       style={{ width }}
     >
-      {/* pl leaves room for native macOS traffic lights (titleBarStyle: Overlay) */}
       <header className="flex h-12 items-center gap-2 pl-[78px] pr-2">
         <div
           data-tauri-drag-region
@@ -221,14 +219,7 @@ export function ChatSidebar({
                 {invites.map((chat) => (
                   <ChatListItem
                     key={chat.coId}
-                    coId={chat.coId}
-                    name={chat.name}
-                    preview={chat.preview}
-                    timestamp={chat.timestamp}
-                    unread={chat.unread}
-                    invited={chat.invited}
-                    joining={chat.joining}
-                    inviterName={chat.inviterName}
+                    chat={chat}
                     selected={!creating && chat.coId === selectedId}
                     onSelect={() => onSelect(chat.coId)}
                   />
@@ -259,13 +250,7 @@ export function ChatSidebar({
               {activeChats.map((chat) => (
                 <ChatListItem
                   key={chat.coId}
-                  coId={chat.coId}
-                  name={chat.name}
-                  preview={chat.preview}
-                  timestamp={chat.timestamp}
-                  unread={chat.unread}
-                  invited={chat.invited}
-                  joining={chat.joining}
+                  chat={chat}
                   selected={!creating && chat.coId === selectedId}
                   onSelect={() => onSelect(chat.coId)}
                 />

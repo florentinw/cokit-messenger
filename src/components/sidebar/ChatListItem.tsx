@@ -2,34 +2,26 @@ import { formatChatTime } from "../../lib/messenger";
 import { cn } from "../../lib/utils";
 import { Button } from "../global/Button";
 import { GroupAvatar } from "../global/GroupAvatar";
+import type { ChatListEntry } from "./chat-list-types";
 
 type Props = {
-  coId: string;
-  name: string;
-  preview?: string;
-  timestamp?: number;
+  chat: ChatListEntry;
   selected?: boolean;
-  unread?: number;
-  /** Pending invite — show Invited label instead of time/unread. */
-  invited?: boolean;
-  /** Accepted invite, waiting for Active membership. */
-  joining?: boolean;
-  inviterName?: string;
   onSelect: () => void;
 };
 
-export function ChatListItem({
-  coId,
-  name,
-  preview,
-  timestamp,
-  selected,
-  unread,
-  invited,
-  joining,
-  inviterName,
-  onSelect,
-}: Props) {
+export function ChatListItem({ chat, selected, onSelect }: Props) {
+  const {
+    coId,
+    name,
+    color,
+    preview,
+    timestamp,
+    unread,
+    invited,
+    joining,
+    inviterName,
+  } = chat;
   const hasUnread = !invited && !joining && (unread ?? 0) > 0;
   const invitePreview = inviterName
     ? `${inviterName} invited you`
@@ -44,7 +36,7 @@ export function ChatListItem({
         selected ? "bg-surface-selected" : "interactive",
       )}
     >
-      <GroupAvatar coId={coId} className="size-12" syncFromCo={!invited && !joining} />
+      <GroupAvatar coId={coId} color={color} className="size-12" />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <span

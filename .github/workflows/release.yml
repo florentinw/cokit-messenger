@@ -83,21 +83,22 @@ jobs:
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional Apple signing / notarization (set as repo secrets when ready):
-          # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          # APPLE_ID: ${{ secrets.APPLE_ID }}
-          # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Ad-hoc signing (free). For Developer ID + notarization later, replace
+          # with repo secrets and remove APPLE_SIGNING_IDENTITY="-" from tauri.conf.json.
+          APPLE_SIGNING_IDENTITY: "-"
         with:
           version: ${{ needs.version.outputs.version }}
           tagName: v__VERSION__
           releaseName: CO Messenger v__VERSION__
           releaseBody: |
-            Automated release from `main`.
+            Automated macOS build from `main` (ad-hoc signed, **not** notarized).
 
-            Download the assets for your Mac architecture and install.
+            ### Install
+            1. Download the `.dmg` for your Mac (Apple Silicon = `aarch64`, Intel = `x86_64`).
+            2. Open the disk image and drag **CO Messenger** to Applications.
+            3. If Gatekeeper blocks it: **right-click → Open** → confirm **Open**.
+
+            Network and Keychain are enabled by default in this build.
           releaseDraft: false
-          prerelease: false
+          prerelease: true
           args: ${{ matrix.args }}

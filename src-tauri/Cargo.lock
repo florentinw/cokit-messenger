@@ -1258,7 +1258,7 @@ dependencies = [
 [[package]]
 name = "co-actor"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1277,7 +1277,7 @@ dependencies = [
 [[package]]
 name = "co-api"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1296,7 +1296,7 @@ dependencies = [
 [[package]]
 name = "co-core-board"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1313,7 +1313,7 @@ dependencies = [
 [[package]]
 name = "co-core-co"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "cid 0.11.3",
@@ -1327,7 +1327,7 @@ dependencies = [
 [[package]]
 name = "co-core-file"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "cid 0.11.3",
@@ -1342,7 +1342,7 @@ dependencies = [
 [[package]]
 name = "co-core-keystore"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "cid 0.11.3",
@@ -1357,7 +1357,7 @@ dependencies = [
 [[package]]
 name = "co-core-membership"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1374,7 +1374,7 @@ dependencies = [
 [[package]]
 name = "co-core-names"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1393,7 +1393,7 @@ dependencies = [
 [[package]]
 name = "co-core-rich-text"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1412,7 +1412,7 @@ dependencies = [
 [[package]]
 name = "co-core-room"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "cid 0.11.3",
@@ -1431,7 +1431,7 @@ dependencies = [
 [[package]]
 name = "co-core-storage"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1501,7 +1501,7 @@ dependencies = [
 [[package]]
 name = "co-identity"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1547,7 +1547,7 @@ dependencies = [
 [[package]]
 name = "co-log"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1567,7 +1567,7 @@ dependencies = [
 [[package]]
 name = "co-macros"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1577,7 +1577,7 @@ dependencies = [
 [[package]]
 name = "co-messaging"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "cid 0.11.3",
  "co-macros",
@@ -1593,7 +1593,7 @@ dependencies = [
 [[package]]
 name = "co-network"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1630,7 +1630,7 @@ dependencies = [
 [[package]]
 name = "co-primitives"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1666,7 +1666,7 @@ dependencies = [
 [[package]]
 name = "co-runtime"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1694,7 +1694,7 @@ dependencies = [
 [[package]]
 name = "co-sdk"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1753,7 +1753,7 @@ dependencies = [
 [[package]]
 name = "co-storage"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "aead",
  "anyhow",
@@ -1959,6 +1959,7 @@ dependencies = [
 [[package]]
 name = "core2"
 version = "0.4.0"
+source = "git+https://github.com/bbqsrc/core2?rev=545e84bcb0f235b12e21351e0c69767958efe2a7#545e84bcb0f235b12e21351e0c69767958efe2a7"
 dependencies = [
  "memchr",
 ]
@@ -8750,7 +8751,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-co-sdk"
 version = "0.1.0"
-source = "git+https://github.com/1iolabs/cokit.git?branch=main#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
+source = "git+https://github.com/1iolabs/cokit.git?rev=049fece420c489a9a35ae2be8ca2e3bdf11eb04e#049fece420c489a9a35ae2be8ca2e3bdf11eb04e"
 dependencies = [
  "anyhow",
  "async-trait",

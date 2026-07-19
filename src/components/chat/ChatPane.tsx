@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CID } from "multiformats";
 import {
   useCo,
   useCoCore,
@@ -7,18 +6,11 @@ import {
   useCoStateRevision,
   useResolveCid,
   resolveCid,
-  getActions,
-  getCoState,
-  resolveActionsParallel,
-  invalidateSharedCoSession,
 } from "../../lib/co-sdk";
 import {
-  chatStore,
   dateChipLabel,
-  displayName,
   ensureRoomCore,
-  extractTextMessages,
-  lastActivityTimestamp,
+  refreshChatFromCo,
   sendTextMessage,
   setRoomName,
   timelineFromEntry,
@@ -62,23 +54,6 @@ function itemSpacingClass(
   }
   if (cluster === "middle" || cluster === "last") return "mt-0.5";
   return "mt-2";
-}
-
-function previewFromActions(
-  actions: unknown[],
-  identity: string | undefined,
-): { preview?: string; timestamp?: number } {
-  const messages = extractTextMessages(actions);
-  const last = messages.length > 0 ? messages[messages.length - 1] : undefined;
-  const timestamp = lastActivityTimestamp(actions) ?? last?.timestamp;
-  if (!last && timestamp === undefined) return {};
-  if (!last) return { timestamp };
-  const previewLine = last.body.split("\n")[0] ?? last.body;
-  const preview =
-    last.from && last.from !== identity
-      ? `${displayName(last.from, identity)}: ${previewLine}`
-      : previewLine;
-  return { preview, timestamp };
 }
 
 type Props = {
@@ -150,43 +125,15 @@ export function ChatPane({
     setComposerError(undefined);
   }, [coId]);
 
-  // Resolve reducer actions into the shared ChatStore (single transcript brain).
-  // Always fetch from current heads — never prefer a stale actionsResponse left
-  // over from the previous heads while useCoActions is still refetching.
+  // ChatStore is the only transcript writer — refresh when heads / state change.
   useEffect(() => {
-    let cancelled = false;
-    async function loadActions() {
-      if (!session || heads === undefined) return;
-      try {
-        const response = await getActions(session, heads, 200, undefined);
-        if (cancelled) return;
-        if (!response?.actions?.length) {
-          chatStore.applyLocal(coId, { actions: [] });
-          return;
-        }
-        const items = await resolveActionsParallel(
-          session,
-          response.actions as CID[],
-          { cache: false },
-        );
-        if (cancelled) return;
-        const { preview, timestamp } = previewFromActions(items, identity);
-        chatStore.applyLocal(coId, {
-          actions: items,
-          preview,
-          timestamp,
-          unread: 0,
-        });
-      } catch (err) {
-        console.warn(`ChatPane failed to resolve actions for ${coId}`, err);
-        invalidateSharedCoSession(coId);
-      }
-    }
-    void loadActions();
-    return () => {
-      cancelled = true;
-    };
-  }, [session, heads, stateRevision, coId, identity]);
+    if (heads === undefined) return;
+    void refreshChatFromCo(coId, identity, {
+      includeActions: true,
+      selected: true,
+      heads,
+    });
+  }, [coId, identity, heads, stateRevision]);
 
   const timeline = useMemo(() => timelineFromEntry(entry), [entry]);
 
@@ -387,36 +334,10 @@ export function ChatPane({
                 setReady(true);
               }
               await sendTextMessage(session, identity, coId, text);
-              try {
-                const [, latestHeads] = await getCoState(coId);
-                const refreshed = await getActions(
-                  session,
-                  latestHeads,
-                  200,
-                  undefined,
-                );
-                const items = await resolveActionsParallel(
-                  session,
-                  refreshed.actions as CID[],
-                  { cache: false },
-                );
-                const { preview, timestamp } = previewFromActions(
-                  items,
-                  identity,
-                );
-                chatStore.applyLocal(coId, {
-                  actions: items,
-                  preview,
-                  timestamp,
-                  unread: 0,
-                });
-              } catch (err) {
-                console.warn(
-                  `ChatPane post-send refresh failed for ${coId}`,
-                  err,
-                );
-                invalidateSharedCoSession(coId);
-              }
+              await refreshChatFromCo(coId, identity, {
+                includeActions: true,
+                selected: true,
+              });
             }}
           />
         </div>
