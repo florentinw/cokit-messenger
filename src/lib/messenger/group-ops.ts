@@ -1,11 +1,16 @@
-import { CID } from "multiformats/cid";
+import {
+  CID,
+  createCo,
+  getCoTip,
+  getSharedCoSession,
+  resolveCid,
+} from "@/lib/co-sdk/co";
 import { v4 as uuid } from "uuid";
 import {
   LOCAL_MEMBERSHIP_CORE,
   type Did,
   type LocalMembershipAction,
 } from "@/lib/co-sdk/identity";
-import { createCo, getCoTip, getSharedCoSession, resolveCid } from "@/lib/co-sdk/co";
 import { pushAction } from "@/lib/co-sdk/core";
 import { type GroupAvatarColor } from "./group-avatar";
 import { readProfileName } from "./profile";

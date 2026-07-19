@@ -1,11 +1,11 @@
-import { useSyncExternalStore } from "react";
-import type { CID } from "multiformats";
 import {
+  type CID,
   getCoTip,
   getSharedCoSession,
   invalidateSharedCoSession,
   resolveCid,
 } from "@/lib/co-sdk/co";
+import { useSyncExternalStore } from "react";
 import { getActions } from "@/lib/co-sdk/core";
 import type { GroupAvatarColor } from "./group-avatar";
 import { avatarColorFromCoTags, ingestDisplayNamesFromTags, nameFromCoTags } from "./tags";

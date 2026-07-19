@@ -1,6 +1,10 @@
-import { CID } from "multiformats/cid";
+import {
+  CID,
+  getCoTip,
+  getSharedCoSession,
+  resolveCid,
+} from "@/lib/co-sdk/co";
 import { type Did, type LocalMembership } from "@/lib/co-sdk/identity";
-import { getCoTip, getSharedCoSession, resolveCid } from "@/lib/co-sdk/co";
 import { pushAction } from "@/lib/co-sdk/core";
 import {
   isGroupAvatarColor,
