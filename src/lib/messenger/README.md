@@ -28,7 +28,8 @@ Same pattern as the [example todo app](https://github.com/1iolabs/example-cokit-
 | File | Role |
 |------|------|
 | `chat-store.ts` | Single writer for sidebar + transcript meta (name, color, preview, actions) |
-| `tags.ts` | CO tag read/write (name, color, display names, invite meta) |
+| `tags.ts` | CO tag read/write (name, color, display names, local profile, invite meta) |
+| `profile.ts` | Local-CO profile display name (sync cache + hydrate/persist) |
 | `group-ops.ts` | Create / join / invite / leave / send |
 | `membership.ts` | LocalMembership list + CoMembers roster |
 | `timeline.ts` | Action → chat timeline |

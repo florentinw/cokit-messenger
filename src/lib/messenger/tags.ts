@@ -18,6 +18,7 @@ import {
   CO_TAG_GROUP_NAME,
   CO_TAG_INVITER_DID,
   CO_TAG_INVITER_NAME,
+  CO_TAG_PROFILE_NAME,
   displayNameTagKey,
 } from "@/lib/messenger/types";
 
@@ -39,26 +40,26 @@ function tagValueAsString(value: unknown): string | undefined {
   return undefined;
 }
 
+/** Last non-empty trimmed string for `key` in CO tags. */
+function stringTagFromCoTags(tags: unknown, key: string): string | undefined {
+  let found: string | undefined;
+  for (const [tagKey, value] of iterTagEntries(tags)) {
+    if (tagKey !== key) continue;
+    const text = tagValueAsString(value)?.trim();
+    if (text) found = text;
+  }
+  return found;
+}
+
 /** Read group display name from CO tags (`name` key). Last matching string wins. */
 export function nameFromCoTags(tags: unknown): string | undefined {
-  let name: string | undefined;
-  for (const [key, value] of iterTagEntries(tags)) {
-    if (key !== CO_TAG_GROUP_NAME) continue;
-    const text = tagValueAsString(value)?.trim();
-    if (text) name = text;
-  }
-  return name;
+  return stringTagFromCoTags(tags, CO_TAG_GROUP_NAME);
 }
 
 /** Read group avatar color from CO tags (`avatar_color` key). Last matching value wins. */
 export function avatarColorFromCoTags(tags: unknown): GroupAvatarColor | undefined {
-  let color: GroupAvatarColor | undefined;
-  for (const [key, value] of iterTagEntries(tags)) {
-    if (key !== CO_TAG_GROUP_AVATAR_COLOR) continue;
-    const text = tagValueAsString(value);
-    if (text && isGroupAvatarColor(text)) color = text;
-  }
-  return color;
+  const text = stringTagFromCoTags(tags, CO_TAG_GROUP_AVATAR_COLOR);
+  return text && isGroupAvatarColor(text) ? text : undefined;
 }
 
 function displayNamesFromCoTags(tags: unknown): Record<string, string> {
@@ -79,12 +80,7 @@ export function ingestDisplayNamesFromTags(tags: unknown): void {
 }
 
 function inviterNameFromTags(tags: unknown): string | undefined {
-  for (const [key, value] of iterTagEntries(tags)) {
-    if (key !== CO_TAG_INVITER_NAME) continue;
-    const text = tagValueAsString(value)?.trim();
-    if (text) return text;
-  }
-  return undefined;
+  return stringTagFromCoTags(tags, CO_TAG_INVITER_NAME);
 }
 
 /** Membership tag: CID → `CoInviteMetadata` (always set by COKIT on invite receive). */
@@ -108,12 +104,8 @@ function tagValueAsCid(value: unknown): CID | undefined {
 }
 
 function inviterDidFromTags(tags: unknown): string | undefined {
-  for (const [key, value] of iterTagEntries(tags)) {
-    if (key !== CO_TAG_INVITER_DID) continue;
-    const text = tagValueAsString(value)?.trim();
-    if (text?.startsWith("did:")) return text;
-  }
-  return undefined;
+  const text = stringTagFromCoTags(tags, CO_TAG_INVITER_DID);
+  return text?.startsWith("did:") ? text : undefined;
 }
 
 async function inviterDidFromInviteMetadata(
@@ -248,6 +240,27 @@ export async function inviteDisplayMetaFromLocalMembership(
   if (inviterDid && inviterName) rememberPeerName(inviterDid, inviterName);
 
   return { inviterDid, inviterName };
+}
+
+/** Read this user’s profile display name from the local CO tags. */
+export async function profileNameFromLocalCo(session: string): Promise<string> {
+  const [stateCid] = await getCoTip("local");
+  if (!stateCid) return "";
+  const co = (await resolveCid(session, stateCid)) as { t?: unknown };
+  return stringTagFromCoTags(co.t, CO_TAG_PROFILE_NAME) ?? "";
+}
+
+/** Persist this user’s profile display name on the local CO. */
+export async function setLocalCoProfileName(
+  session: string,
+  identity: Did,
+  displayNameValue: string,
+): Promise<void> {
+  const trimmed = displayNameValue.trim();
+  if (!trimmed) return;
+  await upsertCoTag(session, identity, "local", CO_TAG_PROFILE_NAME, trimmed, {
+    skipIfUnchanged: true,
+  });
 }
 
 /** Persist group name on CO tags (visible after join / to active members). */

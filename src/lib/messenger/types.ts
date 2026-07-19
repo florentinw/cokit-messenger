@@ -20,6 +20,12 @@ export const CO_TAG_GROUP_AVATAR_COLOR = "avatar_color";
  */
 export const CO_TAG_DISPLAY_NAME_PREFIX = "display_name:";
 
+/**
+ * Tag on the local CO for this user’s profile display name.
+ * Distinct from per-member `display_name:<did>` tags on group COs.
+ */
+export const CO_TAG_PROFILE_NAME = "display_name";
+
 /** Invite payload tag: inviter’s display name (string). Fallback before invite metadata. */
 export const CO_TAG_INVITER_NAME = "inviter_name";
 

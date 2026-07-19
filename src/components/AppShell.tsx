@@ -1,12 +1,14 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   chatStore,
   DEFAULT_GROUP_AVATAR_COLOR,
   displayName,
   formatChatTime,
+  hydrateProfileName,
   IDENTITY_NAME,
   markChatRead,
   localMembershipStateFor,
+  persistProfileName,
   publishDisplayNameToGroups,
   RESET_LOCAL_DATA_HINT,
   TAURI_REQUIRED_MESSAGE,
@@ -83,6 +85,11 @@ export function AppShell() {
 
   useChatHydration(localSession, sidebarMemberships, identity, selectedIdRef);
   useChatStateMultiplexer(activeIdsRef, selectedIdRef, identityRef);
+
+  useEffect(() => {
+    if (!localSession) return;
+    void hydrateProfileName(localSession);
+  }, [localSession]);
 
   const selectedMembership = memberships.find((m) => m.id === focusedId);
   const { selectedMembers, selectedPendingInvites, bumpRoster } = useCoMembers(
@@ -268,8 +275,10 @@ export function AppShell() {
           <ProfilePanel
             identity={identity}
             onClose={() => setPane({ kind: "empty" })}
-            onSaved={(name) => {
-              if (identity && activeCoIds.length > 0) {
+            onSave={async (name) => {
+              if (!localSession || !identity) return;
+              await persistProfileName(localSession, identity, name);
+              if (activeCoIds.length > 0) {
                 void publishDisplayNameToGroups(identity, name, activeCoIds);
               }
             }}
