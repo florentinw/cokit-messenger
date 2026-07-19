@@ -32,11 +32,14 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: ./src-tauri -> target
+          shared-key: tauri-macos-debug
+          cache-on-failure: true
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      # macos-latest is Apple Silicon — build native (no --target) so the
-      # bundler and cargo agree on target/release/, not a triple subdirectory.
-      - name: Build (Apple Silicon)
-        run: pnpm tauri build
+      # Debug build still compiles frontend + Rust + bundles the app, but skips
+      # release optimizations (the ~13m bottleneck). Full release builds stay on
+      # the Release workflow when merging to main.
+      - name: Build (Apple Silicon, debug)
+        run: pnpm tauri build --debug
