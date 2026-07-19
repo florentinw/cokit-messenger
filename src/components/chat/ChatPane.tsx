@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useCo,
-  useCoCore,
+  useCoreTipCid,
   useCoSession,
-  useCoStateRevision,
   useResolveCid,
   resolveCid,
 } from "../../lib/co-sdk-extras";
@@ -75,9 +74,8 @@ export function ChatPane({
   const entry = useChatEntry(coId);
   const { sessionId: session, error: sessionError } = useCoSession(coId);
   const [coCid, heads] = useCo(coId);
-  const roomCoreCid = useCoCore(coCid, "room", session, coId, heads);
-  const room = useResolveCid<RoomState>(roomCoreCid, session, coId, heads);
-  const stateRevision = useCoStateRevision(coId);
+  const roomCoreCid = useCoreTipCid(coCid, "room", session, heads);
+  const room = useResolveCid<RoomState>(roomCoreCid, session, heads);
   const [bootstrapping, setBootstrapping] = useState(false);
   const [ready, setReady] = useState(false);
   const [composerError, setComposerError] = useState<string>();
@@ -133,7 +131,7 @@ export function ChatPane({
       selected: true,
       heads,
     });
-  }, [coId, identity, heads, stateRevision]);
+  }, [coId, identity, heads]);
 
   const timeline = useMemo(() => timelineFromEntry(entry), [entry]);
 

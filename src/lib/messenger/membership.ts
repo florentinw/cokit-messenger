@@ -1,6 +1,5 @@
 import { CID } from "multiformats/cid";
 import {
-  asDagNode,
   DagList,
   getCoState,
   MembershipState,
@@ -9,7 +8,7 @@ import {
   type Membership,
 } from "../co-sdk-extras";
 
-type DagNode = { n?: unknown[]; l?: unknown[] };
+type DagNode = { n?: CID[]; l?: unknown[] };
 
 function isCid(value: unknown): value is CID {
   return CID.asCID(value) != null;
@@ -45,36 +44,49 @@ function membershipFromEntry(item: unknown): Membership | undefined {
   return undefined;
 }
 
+/**
+ * Walk an LSM DagList (or inline leaf list), mapping each entry.
+ * Shared by membership CoMap walks and group participant walks.
+ */
+async function walkDagListEntries<T>(
+  session: string,
+  root: unknown,
+  mapEntry: (item: unknown) => T | undefined,
+): Promise<T[]> {
+  if (root == null) return [];
+  if (isCid(root)) return walkDagListEntries(session, await resolveCid(session, root), mapEntry);
+  if (typeof root !== "object") return [];
+
+  const dag = root as DagNode;
+  const entries: T[] = [];
+
+  if ("n" in dag || "l" in dag) {
+    try {
+      const list = new DagList<unknown>({ n: dag.n, l: dag.l }, session);
+      for (let index = 0; ; index++) {
+        const item = await list.get(index);
+        if (item === undefined) break;
+        const mapped = mapEntry(item);
+        if (mapped !== undefined) entries.push(mapped);
+      }
+      if (entries.length > 0) return entries;
+    } catch {
+      // fall through to inline leaves
+    }
+    for (const item of dag.l ?? []) {
+      const mapped = mapEntry(item);
+      if (mapped !== undefined) entries.push(mapped);
+    }
+  }
+
+  return entries;
+}
+
 function membershipEntriesFromNode(node: unknown): Membership[] {
   if (node == null || typeof node !== "object") return [];
   const dag = node as DagNode;
   const entries: Membership[] = [];
   for (const item of dag.l ?? []) {
-    const membership = membershipFromEntry(item);
-    if (membership) entries.push(membership);
-  }
-  return entries;
-}
-
-async function membershipEntriesFromDagNode(
-  session: string,
-  node: unknown,
-): Promise<Membership[]> {
-  if (node == null) return [];
-  if (isCid(node)) return membershipEntriesFromDagNode(session, await resolveCid(session, node));
-  if (typeof node !== "object") return membershipEntriesFromNode(node);
-
-  const dag = node as DagNode;
-  if (!("n" in dag) && !("l" in dag)) return membershipEntriesFromNode(node);
-
-  const list = new DagList<unknown>(
-    asDagNode(dag as { n?: CID[]; l?: unknown[] }),
-    session,
-  );
-  const entries: Membership[] = [];
-  for (let index = 0; ; index++) {
-    const item = await list.get(index);
-    if (item === undefined) break;
     const membership = membershipFromEntry(item);
     if (membership) entries.push(membership);
   }
@@ -90,13 +102,13 @@ async function membershipEntriesFromCoMapRoot(
   if (typeof root !== "object") return [];
 
   const obj = root as Record<string, unknown>;
-  const activeEntries = await membershipEntriesFromDagNode(session, obj.a);
+  const activeEntries = await walkDagListEntries(session, obj.a, membershipFromEntry);
   if (activeEntries.length > 0) return activeEntries;
   return membershipEntriesFromNode(obj.a ?? obj);
 }
 
 /** Normalize CO SDK CoMap / DagList membership data to a plain array. */
-export function membershipList(raw: unknown): Membership[] {
+function membershipList(raw: unknown): Membership[] {
   if (raw == null) return [];
   if (Array.isArray(raw)) return raw.filter(isMembership);
   if (isCid(raw)) return [];
@@ -160,17 +172,9 @@ export function activeParticipants(membership: Membership): Did[] {
 }
 
 /**
- * Local membership `did` map only tracks *your* state for a CO.
- * Full roster + pending invitees live on the group CO’s participants list —
- * use `collectActiveParticipantsFromGroup` / `collectPendingInviteesFromGroup`.
+ * Wire `Participant.state` is a Rust `#[repr(u8)]` (not the TS string enum).
+ * Active = 0, Invite = 2.
  */
-export function pendingInvitees(membership: Membership): Did[] {
-  return Object.entries(membership.did ?? {})
-    .filter(([, state]) => state === MembershipState.Invite)
-    .map(([did]) => did);
-}
-
-/** COKIT `ParticipantState` (`cores/co` `#[repr(u8)]`). */
 const PARTICIPANT_STATE_ACTIVE = 0;
 const PARTICIPANT_STATE_INVITE = 2;
 
@@ -190,7 +194,7 @@ function participantFromEntry(item: unknown): CoParticipant | undefined {
   return undefined;
 }
 
-/** Walk the group CO `p` (participants) DagList. */
+/** Walk the group CO `p` (participants) DagList once. */
 async function collectGroupParticipants(
   session: string,
   coId: string,
@@ -204,71 +208,33 @@ async function collectGroupParticipants(
   if (root == null || typeof root !== "object") return [];
 
   const obj = root as Record<string, unknown>;
-  const dagRoot = obj.a ?? obj;
-  const entries: CoParticipant[] = [];
-
-  if (dagRoot && typeof dagRoot === "object") {
-    const dag = dagRoot as DagNode;
-    if ("n" in dag || "l" in dag) {
-      const list = new DagList<unknown>(
-    asDagNode(dag as { n?: CID[]; l?: unknown[] }),
-    session,
-  );
-      for (let index = 0; ; index++) {
-        const item = await list.get(index);
-        if (item === undefined) break;
-        const participant = participantFromEntry(item);
-        if (participant) entries.push(participant);
-      }
-    } else {
-      for (const item of (dag as DagNode).l ?? []) {
-        const participant = participantFromEntry(item);
-        if (participant) entries.push(participant);
-      }
-    }
-  }
-
-  return entries;
+  return walkDagListEntries(session, obj.a ?? obj, participantFromEntry);
 }
+
+export type GroupRoster = {
+  active: Did[];
+  pending: Did[];
+};
 
 /**
- * Active members from the group CO participant list.
+ * Active members + pending invitees from the group CO participant list (one walk).
  * Local membership only tracks *your* state — do not use it for the full roster.
  */
-export async function collectActiveParticipantsFromGroup(
+export async function collectGroupRoster(
   session: string,
   coId: string,
-): Promise<Did[]> {
+): Promise<GroupRoster> {
   try {
     const entries = await collectGroupParticipants(session, coId);
-    const dids: Did[] = [];
+    const active: Did[] = [];
+    const pending: Did[] = [];
     for (const p of entries) {
-      if (p.state === PARTICIPANT_STATE_ACTIVE && typeof p.did === "string") {
-        dids.push(p.did);
-      }
+      if (typeof p.did !== "string") continue;
+      if (p.state === PARTICIPANT_STATE_ACTIVE) active.push(p.did);
+      else if (p.state === PARTICIPANT_STATE_INVITE) pending.push(p.did);
     }
-    return dids;
+    return { active, pending };
   } catch {
-    return [];
+    return { active: [], pending: [] };
   }
 }
-
-/** Invitees still pending on the group CO (inviter’s view after ParticipantInvite). */
-export async function collectPendingInviteesFromGroup(
-  session: string,
-  coId: string,
-): Promise<Did[]> {
-  try {
-    const entries = await collectGroupParticipants(session, coId);
-    const dids: Did[] = [];
-    for (const p of entries) {
-      if (p.state === PARTICIPANT_STATE_INVITE && typeof p.did === "string") {
-        dids.push(p.did);
-      }
-    }
-    return dids;
-  } catch {
-    return [];
-  }
-}
-

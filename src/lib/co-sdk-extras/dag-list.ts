@@ -1,13 +1,4 @@
-import { DagList as SdkDagList, type Node } from "@1io/tauri-plugin-co-sdk";
-import type { CID } from "multiformats";
+import { DagList as SdkDagList } from "@1io/tauri-plugin-co-sdk";
 
-export type { Node };
+/** Re-export of the published DagList helper for LSM-style CO collections. */
 export { SdkDagList as DagList };
-
-/** Normalize optional LSM node fields to the official `Node` shape. */
-export function asDagNode<I>(root: {
-  n?: CID[];
-  l?: I[];
-}): Node<I> {
-  return { n: root.n, l: root.l };
-}

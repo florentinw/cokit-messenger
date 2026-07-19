@@ -76,7 +76,6 @@ export function useChatStateMultiplexer(
     let cancelled = false;
     let timer: number | undefined;
     const pending = new Map<string, { stateCid?: CID; heads?: CID[] }>();
-    let revalidateTimer: number | undefined;
 
     async function flush() {
       timer = undefined;
@@ -120,15 +119,9 @@ export function useChatStateMultiplexer(
       unlisten = fn;
     });
 
-    // Occasional revalidate so missed events still heal without a full refresh.
-    revalidateTimer = window.setInterval(() => {
-      for (const coId of activeIdsRef.current) schedule(coId);
-    }, 12_000);
-
     return () => {
       cancelled = true;
       if (timer !== undefined) window.clearTimeout(timer);
-      if (revalidateTimer !== undefined) window.clearInterval(revalidateTimer);
       unlisten?.();
     };
   }, [activeIdsRef, selectedIdRef, identityRef]);

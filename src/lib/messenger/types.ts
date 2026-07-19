@@ -1,6 +1,9 @@
 /** Messenger / room-core domain types. */
 
-import type { Room } from "@1io/tauri-plugin-co-sdk";
+import type { Room } from "../co-sdk-extras";
+
+/** Built-in messaging core name used when pushing room/tag/membership actions. */
+export const CO_CORE_NAME_CO = "co";
 
 export const CO_CORE_NAME_ROOM = "room";
 
@@ -16,10 +19,10 @@ export const CO_TAG_GROUP_AVATAR_COLOR = "avatar_color";
  */
 export const CO_TAG_DISPLAY_NAME_PREFIX = "display_name:";
 
-/** Invite payload tag: inviter’s display name (string). Unused until COKIT persists invite tags. */
+/** Invite payload tag: inviter’s display name (string). Fallback before invite metadata. */
 export const CO_TAG_INVITER_NAME = "inviter_name";
 
-/** Invite payload tag: inviter’s DID. Unused until COKIT persists invite tags. */
+/** Invite payload tag: inviter’s DID. Fallback before invite metadata. */
 export const CO_TAG_INVITER_DID = "inviter_did";
 
 export function displayNameTagKey(did: string): string {
@@ -31,14 +34,16 @@ export const IDENTITY_NAME = "messenger-identity";
 /** Built-in `co-core-room` CID (from `@1io/tauri-plugin-co-sdk` Cores enum). */
 export const ROOM_CORE_CID = "QmXzU5G6K8japFjL1uNiqfTCb96mNrDEKcPsGpapQNQKXF";
 
-/**
- * Room core state — matches the published `Room` schema from co-messaging.
- * (`tags` is present on the wire but unused in the UI today.)
- */
-export type RoomState = Pick<
-  Room.Room,
-  "name" | "description" | "avatar" | "pinned_messages"
->;
+/** Shown when the UI is opened outside the Tauri desktop window. */
+export const TAURI_REQUIRED_MESSAGE =
+  "This app must run inside the CO Messenger desktop window (from `pnpm tauri:dev`), not a normal browser tab at http://localhost:1420.";
+
+/** Recovery hint when local CO storage is corrupt or incomplete. */
+export const RESET_LOCAL_DATA_HINT =
+  "Reset local dev data: stop the app, run `pnpm clear:data`, then `pnpm tauri:dev`.";
+
+/** Room core state — published `Room` schema from co-messaging. */
+export type RoomState = Room.Room;
 
 export type TextMessageContent = {
   msgtype: "text";

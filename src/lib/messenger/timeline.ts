@@ -1,10 +1,35 @@
-import {
-  CO_CORE_NAME_CO,
-  type ReducerAction,
-  reducerActionFrom,
-} from "../co-sdk-extras";
 import { displayName } from "./format";
-import type { MatrixEvent, RoomSystemEvent } from "./types";
+import { CO_CORE_NAME_CO, type MatrixEvent, type RoomSystemEvent } from "./types";
+
+/**
+ * COKIT stores reducer actions with short CBOR keys (`f`/`t`/`c`/`p`).
+ * Some callers may still use the long names (`from`/`time`/`content`/`payload`).
+ */
+interface ReducerAction<T> {
+  f?: string;
+  from?: string;
+  t?: number;
+  time?: number;
+  c?: string;
+  core?: string;
+  p?: T;
+  payload?: T;
+}
+
+function reducerActionFrom<T>(action: ReducerAction<T> | unknown): {
+  from: string;
+  time: number | undefined;
+  core: string | undefined;
+  payload: T | undefined;
+} {
+  const raw = action as ReducerAction<T>;
+  return {
+    from: raw.f ?? raw.from ?? "unknown",
+    time: raw.t ?? raw.time,
+    core: raw.c ?? raw.core,
+    payload: raw.p ?? raw.payload,
+  };
+}
 
 export type ChatMessageItem = {
   kind: "message";
@@ -16,17 +41,10 @@ export type ChatMessageItem = {
 
 export type SystemTimelineEvent = {
   kind: "system";
-  variant: RoomSystemEvent["variant"];
   actorDid: string;
   timestamp: number;
   eventId: string;
-} & (
-  | { variant: "group_created"; members: string[] }
-  | { variant: "member_added"; member: string }
-  | { variant: "member_removed"; member: string }
-  | { variant: "group_icon_changed" }
-  | { variant: "group_name_changed" }
-);
+} & RoomSystemEvent;
 
 export type ChatTimelineItem = ChatMessageItem | SystemTimelineEvent;
 
@@ -330,19 +348,16 @@ function dedupeCreatorJoinEvent(items: ChatTimelineItem[]): ChatTimelineItem[] {
   });
 }
 
-export function extractTextMessages(
-  actions: Array<ReducerAction<MatrixEvent> | MatrixEvent | unknown>,
+export function textMessagesFromTimeline(
+  items: ChatTimelineItem[],
 ): Array<{ from: string; body: string; timestamp: number; eventId: string }> {
-  return extractTimelineItems(actions)
+  return items
     .filter((item): item is ChatMessageItem => item.kind === "message")
     .map(({ from, body, timestamp, eventId }) => ({ from, body, timestamp, eventId }));
 }
 
-/** Latest timeline item timestamp (messages + system / membership events). */
-export function lastActivityTimestamp(
-  actions: Array<ReducerAction<MatrixEvent> | MatrixEvent | unknown>,
-): number | undefined {
-  const items = extractTimelineItems(actions);
+/** Latest timestamp from an already-parsed timeline. */
+export function lastActivityFromTimeline(items: ChatTimelineItem[]): number | undefined {
   if (items.length === 0) return undefined;
   let latest = items[0].timestamp;
   for (let i = 1; i < items.length; i++) {
@@ -444,12 +459,11 @@ export function formatSystemEventText(
     .join("");
 }
 
-/** Sidebar subtitle from the latest message or system event. */
-export function previewFromActions(
-  actions: Array<ReducerAction<MatrixEvent> | MatrixEvent | unknown>,
+/** Sidebar subtitle from an already-parsed timeline. */
+export function previewFromTimeline(
+  items: ChatTimelineItem[],
   identity?: string,
 ): string | undefined {
-  const items = extractTimelineItems(actions);
   if (items.length === 0) return undefined;
   const last = items[items.length - 1];
   if (last.kind === "message") {
