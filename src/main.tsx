@@ -10,6 +10,10 @@ initTheme();
 
 if (isTauri()) {
   document.documentElement.classList.add("tauri-vibrancy");
+  // Suppress the webview's default context menu (e.g. "Reload").
+  document.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
