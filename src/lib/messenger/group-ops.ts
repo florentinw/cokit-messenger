@@ -4,8 +4,8 @@ import {
   getCoTip,
   getSharedCoSession,
   resolveCid,
+  uuid,
 } from "@/lib/co-sdk/co";
-import { v4 as uuid } from "uuid";
 import {
   LOCAL_MEMBERSHIP_CORE,
   type Did,
