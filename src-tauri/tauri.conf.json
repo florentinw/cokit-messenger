@@ -27,7 +27,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost blob: data:; font-src 'self' data:; connect-src ipc: http://ipc.localhost; worker-src 'self' blob:"
     }
   },
   "bundle": {
@@ -42,7 +42,10 @@
     ],
     "macOS": {
       "bundleName": "CO Messenger",
-      "infoPlist": "./Info.plist"
+      "infoPlist": "./Info.plist",
+      "entitlements": "./Entitlements.plist",
+      "signingIdentity": "-",
+      "minimumSystemVersion": "12.0"
     }
   }
 }

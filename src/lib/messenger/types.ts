@@ -14,10 +14,10 @@ export const CO_TAG_GROUP_AVATAR_COLOR = "avatar_color";
  */
 export const CO_TAG_DISPLAY_NAME_PREFIX = "display_name:";
 
-/** Invite payload tag: inviter’s display name (string). */
+/** Invite payload tag: inviter’s display name (string). Unused until COKIT persists invite tags. */
 export const CO_TAG_INVITER_NAME = "inviter_name";
 
-/** Invite payload tag: inviter’s DID. */
+/** Invite payload tag: inviter’s DID. Unused until COKIT persists invite tags. */
 export const CO_TAG_INVITER_DID = "inviter_did";
 
 export function displayNameTagKey(did: string): string {

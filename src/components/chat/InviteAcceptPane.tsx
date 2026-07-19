@@ -1,45 +1,37 @@
-import { truncateDid, useChatEntry } from "../../lib/messenger";
+import { useState } from "react";
+import { displayName, truncateDid, useChatEntry } from "../../lib/messenger";
 import { Button } from "../global/Button";
 import { GroupAvatar } from "../global/GroupAvatar";
 
 type Props = {
   coId: string;
-  /** Group name from CO `name` tag when invite state resolves. */
-  name?: string;
-  /** Inviter display name when known from invite tags. */
-  inviterName?: string;
   /** True while Invite → Join handshake is still completing. */
   pending?: boolean;
-  busy?: boolean;
   error?: string;
-  onAccept: () => void;
-  onDecline: () => void;
+  onAccept: () => Promise<void>;
+  onDecline: () => Promise<void>;
 };
 
 function isResolvedGroupName(coId: string, name?: string): name is string {
   if (!name || name === "Group chat" || name === coId) return false;
-  // Sidebar may pass a truncated coId as a display fallback — not a real name.
   if (name === truncateDid(coId, 22)) return false;
   return true;
 }
 
 export function InviteAcceptPane({
   coId,
-  name: nameProp,
-  inviterName: inviterNameProp,
   pending,
-  busy,
   error,
   onAccept,
   onDecline,
 }: Props) {
   const entry = useChatEntry(coId);
-  const name = isResolvedGroupName(coId, entry?.name)
-    ? entry!.name
-    : isResolvedGroupName(coId, nameProp)
-      ? nameProp
-      : undefined;
-  const inviterName = entry?.inviterName || inviterNameProp;
+  const [acting, setActing] = useState(false);
+  const name = isResolvedGroupName(coId, entry?.name) ? entry.name : undefined;
+  const inviterDid = entry?.inviterDid;
+  const inviterName = inviterDid
+    ? displayName(inviterDid)
+    : entry?.inviterName;
   const hasName = !!name;
   const title = hasName ? name : truncateDid(coId, 22);
   const inviteHeadline = inviterName
@@ -49,6 +41,16 @@ export function InviteAcceptPane({
     : hasName
       ? `You’ve been invited to “${name}”`
       : "You’ve been invited to this group";
+
+  async function run(action: () => Promise<void>) {
+    if (acting) return;
+    setActing(true);
+    try {
+      await action();
+    } finally {
+      setActing(false);
+    }
+  }
 
   return (
     <section className="content-pane layer-card relative flex h-full min-w-0 flex-1 flex-col">
@@ -60,7 +62,6 @@ export function InviteAcceptPane({
               color={entry?.color}
               className="size-6 rounded"
               padClassName="p-[15%]"
-              syncFromCo={false}
             />
             <h1 className="type-body truncate text-foreground">{title}</h1>
           </div>
@@ -85,25 +86,23 @@ export function InviteAcceptPane({
             </p>
           )}
 
-          {error && (
-            <p className="mt-4 type-body text-error">{error}</p>
-          )}
+          {error && <p className="mt-4 type-body text-error">{error}</p>}
 
           {!pending && (
             <div className="mt-8 flex justify-center gap-3">
               <Button
                 variant="secondary"
-                isDisabled={busy}
-                onPress={onDecline}
+                isDisabled={acting}
+                onPress={() => void run(onDecline)}
               >
                 Decline
               </Button>
               <Button
                 variant="primary"
-                isDisabled={busy}
-                onPress={onAccept}
+                isDisabled={acting}
+                onPress={() => void run(onAccept)}
               >
-                {busy ? "Working…" : "Accept"}
+                {acting ? "Working…" : "Accept"}
               </Button>
             </div>
           )}

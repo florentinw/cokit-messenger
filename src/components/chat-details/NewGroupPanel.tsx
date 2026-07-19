@@ -1,21 +1,28 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { type GroupAvatarColor } from "../../lib/messenger";
+import {
+  DEFAULT_GROUP_AVATAR_COLOR,
+  type GroupAvatarColor,
+} from "../../lib/messenger";
 import { useOverflowHeaderBorder } from "../../lib/useOverflowHeaderBorder";
-import { cn } from "../../lib/utils";
 import { Button } from "../global/Button";
+import {
+  ContentPaneHeader,
+  ContentPaneShell,
+} from "../global/ContentPaneHeader";
 import { GroupAvatarColorPicker } from "../global/GroupAvatar";
 import { Icon } from "../global/icons/Icon";
-import { ParticipantLabel } from "../global/ParticipantLabel";
+import { ParticipantRow } from "../global/ParticipantRow";
 import { InviteParticipantDialog } from "./InviteParticipantDialog";
+
+export type CreateDraft = {
+  name: string;
+  color: GroupAvatarColor;
+};
 
 type Props = {
   identity?: string;
-  busy?: boolean;
   error?: string;
-  name: string;
-  avatarColor: GroupAvatarColor;
-  onNameChange: (name: string) => void;
-  onAvatarColorChange: (color: GroupAvatarColor) => void;
+  onDraftChange?: (draft: CreateDraft) => void;
   onClose: () => void;
   onCreate: (
     name: string,
@@ -26,19 +33,20 @@ type Props = {
 
 export function NewGroupPanel({
   identity,
-  busy,
   error,
-  name,
-  avatarColor,
-  onNameChange,
-  onAvatarColorChange,
+  onDraftChange,
   onClose,
   onCreate,
 }: Props) {
+  const [name, setName] = useState("");
+  const [avatarColor, setAvatarColor] = useState<GroupAvatarColor>(
+    DEFAULT_GROUP_AVATAR_COLOR,
+  );
   const [invitees, setInvitees] = useState<string[]>([]);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-  const canCreate = name.trim().length > 0 && !!identity && !busy;
-  const canInvite = !!identity && !busy;
+  const [creating, setCreating] = useState(false);
+  const canCreate = name.trim().length > 0 && !!identity && !creating;
+  const canInvite = !!identity && !creating;
   const scrollRef = useRef<HTMLFormElement>(null);
   const headerBorder = useOverflowHeaderBorder(
     scrollRef,
@@ -46,13 +54,20 @@ export function NewGroupPanel({
   );
 
   useEffect(() => {
-    setInvitees([]);
-  }, []);
+    onDraftChange?.({ name, color: avatarColor });
+  }, [name, avatarColor, onDraftChange]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!canCreate) return;
-    await onCreate(name.trim(), avatarColor, invitees);
+    setCreating(true);
+    try {
+      await onCreate(name.trim(), avatarColor, invitees);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function handleInvite(inviteeDid: string) {
@@ -63,33 +78,22 @@ export function NewGroupPanel({
   }
 
   return (
-    <section className="content-pane layer-card relative flex h-full min-w-0 flex-1 flex-col">
-      <header
-        className={cn(
-          "flex h-12 shrink-0 items-center gap-2 bg-surface px-2.5",
-          headerBorder && "border-b border-separator",
-        )}
-      >
-        <Button variant="icon" onPress={onClose} aria-label="Back">
-          <Icon name="back" />
-        </Button>
-        <div
-          data-tauri-drag-region
-          className="flex min-w-0 flex-1 items-center self-stretch"
-        >
-          <h1 className="type-body text-foreground">
-            New Group
-          </h1>
-        </div>
-        <Button
-          type="submit"
-          form="new-group-form"
-          variant="primary"
-          isDisabled={!canCreate}
-        >
-          {busy ? "Creating…" : "Create"}
-        </Button>
-      </header>
+    <ContentPaneShell>
+      <ContentPaneHeader
+        title="New Group"
+        onBack={onClose}
+        bordered={headerBorder}
+        action={
+          <Button
+            type="submit"
+            form="new-group-form"
+            variant="primary"
+            isDisabled={!canCreate}
+          >
+            {creating ? "Creating…" : "Create"}
+          </Button>
+        }
+      />
 
       <form
         id="new-group-form"
@@ -98,7 +102,7 @@ export function NewGroupPanel({
         className="flex min-h-0 flex-1 flex-col overflow-y-auto"
       >
         <div className="mt-8">
-          <GroupAvatarColorPicker color={avatarColor} onChange={onAvatarColorChange} />
+          <GroupAvatarColorPicker color={avatarColor} onChange={setAvatarColor} />
         </div>
 
         <div className="mt-10 px-4">
@@ -108,16 +112,14 @@ export function NewGroupPanel({
           <input
             autoFocus
             value={name}
-            onChange={(e) => onNameChange(e.target.value)}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Group name"
             className="type-body input-pill border-foreground placeholder:text-muted"
           />
         </div>
 
         <div className="mt-6 flex flex-col">
-          <p className="px-5 pb-1 type-body-regular text-muted">
-            Participants
-          </p>
+          <p className="px-5 pb-1 type-body-regular text-muted">Participants</p>
           <div className="px-4">
             <Button
               variant="secondary"
@@ -133,47 +135,40 @@ export function NewGroupPanel({
 
           <div className="px-4">
             {identity && (
-              <div className="mt-2 flex items-center justify-between border-b border-separator py-2">
-                <div className="flex items-center gap-3">
-                  <div className="avatar-face flex size-8 items-center justify-center overflow-hidden rounded-full layer-inset bg-surface text-muted">
-                    <Icon name="user" className="size-4" />
-                  </div>
-                  <ParticipantLabel did={identity} identity={identity} />
-                </div>
-                <span className="type-body-regular text-muted">You</span>
+              <div className="mt-2">
+                <ParticipantRow
+                  did={identity}
+                  identity={identity}
+                  trailing={
+                    <span className="type-body-regular text-muted">You</span>
+                  }
+                />
               </div>
             )}
 
             {invitees.map((did) => (
-              <div
+              <ParticipantRow
                 key={did}
-                className="flex items-center justify-between border-b border-separator py-2"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="avatar-face flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full layer-inset bg-surface text-muted">
-                    <Icon name="user" className="size-4" />
-                  </div>
-                  <ParticipantLabel did={did} />
-                </div>
-                <Button
-                  variant="bare"
-                  isDisabled={busy}
-                  onPress={() =>
-                    setInvitees((prev) => prev.filter((entry) => entry !== did))
-                  }
-                  className="shrink-0 type-body-regular text-muted"
-                  aria-label={`Remove ${did}`}
-                >
-                  Remove
-                </Button>
-              </div>
+                did={did}
+                trailing={
+                  <Button
+                    variant="bare"
+                    isDisabled={creating}
+                    onPress={() =>
+                      setInvitees((prev) => prev.filter((entry) => entry !== did))
+                    }
+                    className="shrink-0 type-body-regular text-muted"
+                    aria-label={`Remove ${did}`}
+                  >
+                    Remove
+                  </Button>
+                }
+              />
             ))}
           </div>
         </div>
 
-        {error && (
-          <p className="mt-4 px-4 type-body text-error">{error}</p>
-        )}
+        {error && <p className="mt-4 px-4 type-body text-error">{error}</p>}
         {!identity && (
           <p className="mt-4 px-4 type-body-regular text-muted">
             Creating your local ID (did:key) so you can join chats — Create unlocks
@@ -188,6 +183,6 @@ export function NewGroupPanel({
         onClose={() => setInviteDialogOpen(false)}
         onInvite={handleInvite}
       />
-    </section>
+    </ContentPaneShell>
   );
 }

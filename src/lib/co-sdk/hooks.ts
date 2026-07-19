@@ -4,13 +4,12 @@ import { DagList } from "./dag-list";
 import { CoOperationError, formatCoError } from "./errors";
 import {
   createIdentity,
-  getActions,
   getCoState,
   resolveCid,
 } from "./invoke";
 import { listenCoSdkState } from "./state-listener";
 import { getSharedCoSession } from "./session-cache";
-import type { GetActionsResponse, KeystoreKey } from "./types";
+import type { KeystoreKey } from "./types";
 
 function headsKey(heads: CID[] | undefined): string {
   return heads?.map((h) => h.toString()).join("\0") ?? "";
@@ -259,29 +258,4 @@ export function useDidKeyIdentity(
   }, [name, sessionId, localStateCid]);
 
   return { identity, error: identityError };
-}
-
-export function useCoActions(
-  heads: CID[] | undefined,
-  session: string | undefined,
-  count = 100,
-  watchCo?: string,
-): GetActionsResponse | undefined {
-  const [actions, setActions] = useState<GetActionsResponse>();
-  const revision = useCoStateRevision(watchCo);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      if (heads === undefined || session === undefined) return;
-      const result = await getActions(session, heads, count, undefined);
-      if (!cancelled) setActions(result);
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [headsKey(heads), session, count, revision]);
-
-  return actions;
 }

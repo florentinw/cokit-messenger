@@ -2,8 +2,14 @@
 
 Room / Matrix-style event model, group chat operations, profile & unread helpers.
 
-## Upstream patches
+## Modules
 
-COKIT diffs we rely on until they’re merged upstream live in [`patches/`](./patches/).
-
-- `cokit-invite-persist-display-tags.patch` — keep invite CO tags (name, avatar color, …) on the invitee’s membership so the accept UI can render before `sessionOpen`.
+| File | Role |
+|------|------|
+| `chat-store.ts` | Single writer for sidebar + transcript meta (name, color, preview, actions) |
+| `tags.ts` | CO tag read/write (name, color, display names, invite meta) |
+| `group-ops.ts` | Create / join / invite / leave / send |
+| `membership.ts` | Local membership list + group participant roster |
+| `timeline.ts` | Action → chat timeline |
+| `format.ts` | Display helpers (`displayName`, times) |
+| `group-avatar.ts` | Avatar color palette (UI reads color from ChatStore) |

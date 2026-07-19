@@ -6,5 +6,7 @@
 	<string>CO Messenger</string>
 	<key>CFBundleName</key>
 	<string>CO Messenger</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>CO Messenger uses the local network to find peers and sync encrypted group chats.</string>
 </dict>
 </plist>

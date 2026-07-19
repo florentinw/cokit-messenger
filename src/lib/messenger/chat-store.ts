@@ -8,11 +8,7 @@ import {
   resolveActionsParallel,
   resolveCid,
 } from "../co-sdk";
-import {
-  isGroupAvatarColor,
-  writeGroupAvatarColor,
-  type GroupAvatarColor,
-} from "./group-avatar";
+import type { GroupAvatarColor } from "./group-avatar";
 import {
   avatarColorFromCoTags,
   displayName,
@@ -33,6 +29,8 @@ export type ChatStoreEntry = {
   preview?: string;
   timestamp?: number;
   unread: number;
+  /** Inviter DID (from CoInviteMetadata / invite tags). */
+  inviterDid?: string;
   /** Inviter display name (pending invites). */
   inviterName?: string;
   /** Bumped on optimistic local edits (name/color). Remote fetches capture this and skip overwriting those fields if it changed mid-flight. */
@@ -121,6 +119,7 @@ class ChatStore {
       preview?: string;
       timestamp?: number;
       actions?: unknown[];
+      inviterDid?: string;
       inviterName?: string;
     },
   ): void {
@@ -135,6 +134,7 @@ class ChatStore {
       preview: patch.preview ?? prev?.preview,
       timestamp: patch.timestamp ?? prev?.timestamp,
       unread: patch.unread ?? prev?.unread ?? 0,
+      inviterDid: patch.inviterDid ?? prev?.inviterDid,
       inviterName: patch.inviterName ?? prev?.inviterName,
       localRevision:
         nameChanged || colorChanged
@@ -150,13 +150,11 @@ class ChatStore {
       prev.preview === next.preview &&
       prev.timestamp === next.timestamp &&
       prev.unread === next.unread &&
+      prev.inviterDid === next.inviterDid &&
       prev.inviterName === next.inviterName &&
       prev.actions === next.actions
     ) {
       return;
-    }
-    if (patch.color && isGroupAvatarColor(patch.color)) {
-      writeGroupAvatarColor(coId, patch.color);
     }
     this.entries.set(coId, next);
     this.emit();
@@ -179,6 +177,7 @@ class ChatStore {
       preview: patch.preview ?? prev?.preview,
       timestamp: patch.timestamp ?? prev?.timestamp,
       unread: patch.unread ?? prev?.unread ?? 0,
+      inviterDid: prev?.inviterDid,
       inviterName: prev?.inviterName,
       localRevision: prev?.localRevision ?? 0,
       actions: patch.actions ?? prev?.actions,
@@ -192,13 +191,11 @@ class ChatStore {
       prev.preview === next.preview &&
       prev.timestamp === next.timestamp &&
       prev.unread === next.unread &&
+      prev.inviterDid === next.inviterDid &&
       prev.inviterName === next.inviterName &&
       prev.actions === next.actions
     ) {
       return;
-    }
-    if (next.color && (!prev || prev.color !== next.color)) {
-      writeGroupAvatarColor(coId, next.color);
     }
     this.entries.set(coId, next);
     this.emit();

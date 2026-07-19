@@ -10,11 +10,13 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "icons:macos": "node scripts/generate-macos-icons.mjs",
-    "tauri:dev": "bash -c 'set -e; pnpm tauri:dev:a & A=$!; for i in $(seq 1 400); do curl -sf http://localhost:1420 >/dev/null && break; sleep 0.3; done; curl -sf http://localhost:1420 >/dev/null || { kill $A 2>/dev/null; echo \"Timed out waiting for Vite on :1420\"; exit 1; }; sleep 1; pnpm tauri:dev:b & B=$!; trap \"kill $A $B 2>/dev/null; exit 130\" INT TERM; wait $A $B'",
-    "tauri:dev:single": "mkdir -p tmp/data && CO_NO_KEYCHAIN=true CO_BASE_PATH=\"$PWD/tmp/data\" pnpm tauri dev",
-    "tauri:dev:a": "mkdir -p tmp/data && CO_NO_KEYCHAIN=true CO_ENABLE_NETWORK=true CO_BASE_PATH=\"$PWD/tmp/data\" pnpm tauri dev",
-    "tauri:dev:b": "mkdir -p tmp/data-b && CO_NO_KEYCHAIN=true CO_ENABLE_NETWORK=true CO_BASE_PATH=\"$PWD/tmp/data-b\" pnpm tauri dev --no-dev-server-wait -c src-tauri/tauri.dev-instance-b.conf.json",
-    "tauri:dev:c": "mkdir -p tmp/data-c && CO_NO_KEYCHAIN=true CO_ENABLE_NETWORK=true CO_BASE_PATH=\"$PWD/tmp/data-c\" pnpm tauri dev --no-dev-server-wait -c src-tauri/tauri.dev-instance-c.conf.json",
+    "tauri:dev": "node scripts/dev-instances.mjs",
+    "tauri:dev:abc": "node scripts/dev-instances.mjs c",
+    "tauri:dev:single": "mkdir -p tmp/data && CO_NO_KEYCHAIN=true CO_DISABLE_NETWORK=true CO_BASE_PATH=\"$PWD/tmp/data\" pnpm exec tauri dev",
+    "tauri:dev:a": "mkdir -p tmp/data && CO_NO_KEYCHAIN=true CO_BASE_PATH=\"$PWD/tmp/data\" pnpm exec tauri dev",
+    "tauri:dev:b": "mkdir -p tmp/data-b && CO_NO_KEYCHAIN=true CO_BASE_PATH=\"$PWD/tmp/data-b\" pnpm exec tauri dev --no-dev-server-wait -c src-tauri/tauri.dev-instance-b.conf.json",
+    "tauri:dev:c": "mkdir -p tmp/data-c && CO_NO_KEYCHAIN=true CO_BASE_PATH=\"$PWD/tmp/data-c\" pnpm exec tauri dev --no-dev-server-wait -c src-tauri/tauri.dev-instance-c.conf.json",
+    "tauri:build": "pnpm exec tauri build",
     "clear:data": "rm -rf tmp/data tmp/data-b tmp/data-c && echo \"Cleared local CO data (tmp/data*). Restart with pnpm tauri:dev.\""
   },
   "dependencies": {

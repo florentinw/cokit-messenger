@@ -1,27 +1,28 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  readGroupAvatarColor,
+  DEFAULT_GROUP_AVATAR_COLOR,
   truncateDid,
   useChatEntry,
   type GroupAvatarColor,
 } from "../../lib/messenger";
 import { useOverflowHeaderBorder } from "../../lib/useOverflowHeaderBorder";
-import { cn } from "../../lib/utils";
 import { ActionMenu } from "../global/ActionMenu";
 import { Button } from "../global/Button";
 import { ConfirmDialog } from "../global/ConfirmDialog";
+import {
+  ContentPaneHeader,
+  ContentPaneShell,
+} from "../global/ContentPaneHeader";
 import { GroupAvatarColorPicker } from "../global/GroupAvatar";
 import { Icon } from "../global/icons/Icon";
-import { ParticipantLabel } from "../global/ParticipantLabel";
+import { ParticipantRow } from "../global/ParticipantRow";
 import { InviteParticipantDialog } from "./InviteParticipantDialog";
 
 type Props = {
   coId: string;
-  name: string;
   identity?: string;
   participants: string[];
   pendingInvites?: string[];
-  busy?: boolean;
   onClose: () => void;
   onLeave: () => Promise<void>;
   onRemoveParticipant?: (participantDid: string) => Promise<void>;
@@ -37,11 +38,9 @@ type ConfirmState =
 
 export function GroupDetails({
   coId,
-  name,
   identity,
   participants,
   pendingInvites = [],
-  busy,
   onClose,
   onLeave,
   onRemoveParticipant,
@@ -50,7 +49,8 @@ export function GroupDetails({
   onSave,
 }: Props) {
   const storeEntry = useChatEntry(coId);
-  const storeColor = storeEntry?.color ?? readGroupAvatarColor(coId);
+  const name = storeEntry?.name || "Group chat";
+  const storeColor = storeEntry?.color ?? DEFAULT_GROUP_AVATAR_COLOR;
   const [draftName, setDraftName] = useState(name);
   const [saving, setSaving] = useState(false);
   const [renameError, setRenameError] = useState<string>();
@@ -72,9 +72,9 @@ export function GroupDetails({
     );
     return [...new Set(merged)];
   }, [pendingInvites, optimisticPending, hiddenPending, roster]);
-  const canInvite = !!onInvite && !!identity && !busy;
-  const canRevoke = !!onRevokeInvite && !!identity && !busy;
-  const canRemove = !!onRemoveParticipant && !!identity && !busy;
+  const canInvite = !!onInvite && !!identity && !actionBusy;
+  const canRevoke = !!onRevokeInvite && !!identity && !actionBusy;
+  const canRemove = !!onRemoveParticipant && !!identity && !actionBusy;
   const trimmedDraft = draftName.trim();
   const nameDirty = trimmedDraft.length > 0 && trimmedDraft !== name.trim();
   const colorDirty = draftColor !== savedColor;
@@ -82,8 +82,8 @@ export function GroupDetails({
     !!onSave &&
     trimmedDraft.length > 0 &&
     (nameDirty || colorDirty) &&
-    !busy &&
-    !saving;
+    !saving &&
+    !actionBusy;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const headerBorder = useOverflowHeaderBorder(
@@ -96,17 +96,15 @@ export function GroupDetails({
     setRenameError(undefined);
     setOptimisticPending([]);
     setHiddenPending([]);
-    const color = storeEntry?.color ?? readGroupAvatarColor(coId);
+    const color = storeEntry?.color ?? DEFAULT_GROUP_AVATAR_COLOR;
     setSavedColor(color);
     setDraftColor(color);
   }, [name, coId, storeEntry?.color]);
 
   useEffect(() => {
-    // Drop optimistic rows once the group CO reports them.
     setOptimisticPending((prev) =>
       prev.filter((did) => !pendingInvites.includes(did)),
     );
-    // Clear revoke hides once the CO no longer lists them as Invite.
     setHiddenPending((prev) =>
       prev.filter((did) => pendingInvites.includes(did)),
     );
@@ -158,41 +156,23 @@ export function GroupDetails({
     }
   }
 
-  function openLeaveConfirm() {
-    setConfirmState({ kind: "leave" });
-  }
-
-  function openRemoveConfirm(did: string) {
-    setConfirmState({ kind: "remove", did });
-  }
-
-  function openRevokeConfirm(did: string) {
-    setConfirmState({ kind: "revoke", did });
-  }
-
   return (
-    <section className="content-pane layer-card relative flex h-full min-w-0 flex-1 flex-col">
-      <header
-        data-tauri-drag-region
-        className={cn(
-          "flex h-12 shrink-0 items-center justify-between bg-surface px-2.5",
-          headerBorder && "border-b border-separator",
-        )}
-      >
-        <div className="flex items-center gap-2">
-          <Button variant="icon" onPress={onClose} aria-label="Back">
-            <Icon name="back" />
+    <ContentPaneShell>
+      <ContentPaneHeader
+        title="Info"
+        onBack={onClose}
+        bordered={headerBorder}
+        dragHeader
+        action={
+          <Button
+            variant="primary"
+            isDisabled={!canSave}
+            onPress={() => void onSaveChanges()}
+          >
+            {saving ? "Saving…" : "Save changes"}
           </Button>
-          <h1 className="type-body text-foreground">Info</h1>
-        </div>
-        <Button
-          variant="primary"
-          isDisabled={!canSave}
-          onPress={() => void onSaveChanges()}
-        >
-          {saving ? "Saving…" : "Save changes"}
-        </Button>
-      </header>
+        }
+      />
 
       <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <div className="mt-8">
@@ -214,9 +194,7 @@ export function GroupDetails({
         </div>
 
         <div className="mt-6 flex flex-col gap-2 pb-6">
-          <p className="px-5 pb-1 type-body-regular text-muted">
-            Participants
-          </p>
+          <p className="px-5 pb-1 type-body-regular text-muted">Participants</p>
           <div className="px-4">
             <Button
               variant="secondary"
@@ -243,69 +221,63 @@ export function GroupDetails({
               ];
 
               return (
-                <li
-                  key={did}
-                  className="flex items-center justify-between border-b border-separator py-2"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="avatar-face flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full layer-inset bg-surface text-muted">
-                      <Icon name="user" className="size-4" />
-                    </div>
-                    <ParticipantLabel did={did} identity={identity} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isSelf && (
-                      <span className="type-body-regular text-muted">You</span>
-                    )}
-                    <ActionMenu
-                      label="Participant options"
-                      isDisabled={busy || actionBusy}
-                      actions={actions}
-                      onAction={(id) => {
-                        if (id === "copy-did") {
-                          void navigator.clipboard.writeText(did);
-                        } else if (id === "leave") {
-                          openLeaveConfirm();
-                        } else if (id === "remove") {
-                          openRemoveConfirm(did);
-                        }
-                      }}
-                    />
-                  </div>
+                <li key={did}>
+                  <ParticipantRow
+                    did={did}
+                    identity={identity}
+                    trailing={
+                      <div className="flex items-center gap-2">
+                        {isSelf && (
+                          <span className="type-body-regular text-muted">You</span>
+                        )}
+                        <ActionMenu
+                          label="Participant options"
+                          isDisabled={actionBusy}
+                          actions={actions}
+                          onAction={(id) => {
+                            if (id === "copy-did") {
+                              void navigator.clipboard.writeText(did);
+                            } else if (id === "leave") {
+                              setConfirmState({ kind: "leave" });
+                            } else if (id === "remove") {
+                              setConfirmState({ kind: "remove", did });
+                            }
+                          }}
+                        />
+                      </div>
+                    }
+                  />
                 </li>
               );
             })}
             {pending.map((did) => (
-              <li
-                key={`pending-${did}`}
-                className="flex items-center justify-between border-b border-separator py-2"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="avatar-face flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full layer-inset bg-surface text-muted">
-                    <Icon name="user" className="size-4" />
-                  </div>
-                  <ParticipantLabel did={did} identity={identity} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="type-body-regular text-muted">Invited</span>
-                  <ActionMenu
-                    label="Invite options"
-                    isDisabled={busy || actionBusy}
-                    actions={[
-                      { id: "copy-did", label: "Copy DID" },
-                      ...(canRevoke
-                        ? [{ id: "revoke", label: "Revoke invite" }]
-                        : []),
-                    ]}
-                    onAction={(id) => {
-                      if (id === "copy-did") {
-                        void navigator.clipboard.writeText(did);
-                      } else if (id === "revoke") {
-                        openRevokeConfirm(did);
-                      }
-                    }}
-                  />
-                </div>
+              <li key={`pending-${did}`}>
+                <ParticipantRow
+                  did={did}
+                  identity={identity}
+                  trailing={
+                    <div className="flex items-center gap-2">
+                      <span className="type-body-regular text-muted">Invited</span>
+                      <ActionMenu
+                        label="Invite options"
+                        isDisabled={actionBusy}
+                        actions={[
+                          { id: "copy-did", label: "Copy DID" },
+                          ...(canRevoke
+                            ? [{ id: "revoke", label: "Revoke invite" }]
+                            : []),
+                        ]}
+                        onAction={(id) => {
+                          if (id === "copy-did") {
+                            void navigator.clipboard.writeText(did);
+                          } else if (id === "revoke") {
+                            setConfirmState({ kind: "revoke", did });
+                          }
+                        }}
+                      />
+                    </div>
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -369,6 +341,6 @@ export function GroupDetails({
         onClose={() => setConfirmState(undefined)}
         onConfirm={handleConfirm}
       />
-    </section>
+    </ContentPaneShell>
   );
 }
