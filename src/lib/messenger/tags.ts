@@ -1,11 +1,11 @@
 import { CID } from "multiformats/cid";
 import {
-  getCoState,
+  getCoTip,
   getSharedCoSession,
   pushAction,
   resolveCid,
   type Did,
-  type Membership,
+  type LocalMembership,
 } from "../co-sdk-extras";
 import {
   isGroupAvatarColor,
@@ -13,7 +13,7 @@ import {
 } from "./group-avatar";
 import { getPeerName, rememberPeerName, rememberPeerNames } from "./peer-names";
 import {
-  CO_CORE_NAME_CO,
+  CO_CORE,
   CO_TAG_DISPLAY_NAME_PREFIX,
   CO_TAG_GROUP_AVATAR_COLOR,
   CO_TAG_GROUP_NAME,
@@ -168,8 +168,8 @@ function iterTagEntries(tags: unknown): Array<[string, unknown]> {
   return out;
 }
 
-function membershipTagBag(membership: Membership): unknown {
-  const raw = membership as Membership & { t?: unknown };
+function membershipTagBag(membership: LocalMembership): unknown {
+  const raw = membership as LocalMembership & { t?: unknown };
   return raw.tags ?? raw.t;
 }
 
@@ -192,7 +192,7 @@ async function upsertCoTag(
   value: string,
   options?: { skipIfUnchanged?: boolean },
 ): Promise<boolean> {
-  const [stateCid] = await getCoState(coId);
+  const [stateCid] = await getCoTip(coId);
   if (stateCid) {
     const co = (await resolveCid(session, stateCid)) as { t?: unknown };
     const existing = stringTagEntries(co.t, key);
@@ -206,7 +206,7 @@ async function upsertCoTag(
     if (existing.length > 0) {
       await pushAction(
         session,
-        CO_CORE_NAME_CO,
+        CO_CORE,
         { TagsRemove: { tags: existing } },
         identity,
       );
@@ -215,7 +215,7 @@ async function upsertCoTag(
 
   await pushAction(
     session,
-    CO_CORE_NAME_CO,
+    CO_CORE,
     { TagsInsert: { tags: [[key, value]] } },
     identity,
   );
@@ -232,9 +232,9 @@ export type InviteDisplayMeta = {
  * Stock COKIT only keeps `co-invite-metadata` on the membership (not group
  * name/color tags), so we resolve the inviter DID from that metadata only.
  */
-export async function inviteDisplayMetaFromMembership(
+export async function inviteDisplayMetaFromLocalMembership(
   localSession: string,
-  membership: Membership,
+  membership: LocalMembership,
 ): Promise<InviteDisplayMeta> {
   const tagBag = membershipTagBag(membership);
   ingestDisplayNamesFromTags(tagBag);

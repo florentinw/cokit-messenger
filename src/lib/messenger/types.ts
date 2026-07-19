@@ -2,10 +2,11 @@
 
 import type { Room } from "../co-sdk-extras";
 
-/** Built-in messaging core name used when pushing room/tag/membership actions. */
-export const CO_CORE_NAME_CO = "co";
+/** Built-in CO container core (tags + CoMember wire actions). */
+export const CO_CORE = "co";
 
-export const CO_CORE_NAME_ROOM = "room";
+/** Messaging / timeline core name. */
+export const ROOM_CORE = "room";
 
 /** CO tag key for the group display name (copied into DidComm invite payloads). */
 export const CO_TAG_GROUP_NAME = "name";
@@ -31,8 +32,8 @@ export function displayNameTagKey(did: string): string {
 
 export const IDENTITY_NAME = "messenger-identity";
 
-/** Built-in `co-core-room` CID (from `@1io/tauri-plugin-co-sdk` Cores enum). */
-export const ROOM_CORE_CID = "QmXzU5G6K8japFjL1uNiqfTCb96mNrDEKcPsGpapQNQKXF";
+/** Built-in `co-core-room` WASM/binary CID (from `@1io/tauri-plugin-co-sdk` Cores enum). */
+export const ROOM_CORE_BINARY_CID = "QmXzU5G6K8japFjL1uNiqfTCb96mNrDEKcPsGpapQNQKXF";
 
 /** Shown when the UI is opened outside the Tauri desktop window. */
 export const TAURI_REQUIRED_MESSAGE =

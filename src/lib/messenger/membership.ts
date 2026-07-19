@@ -1,11 +1,11 @@
 import { CID } from "multiformats/cid";
 import {
   DagList,
-  getCoState,
-  MembershipState,
+  getCoTip,
+  LocalMembershipState,
   resolveCid,
   type Did,
-  type Membership,
+  type LocalMembership,
 } from "../co-sdk-extras";
 
 type DagNode = { n?: CID[]; l?: unknown[] };
@@ -14,17 +14,17 @@ function isCid(value: unknown): value is CID {
   return CID.asCID(value) != null;
 }
 
-function isMembership(value: unknown): value is Membership {
+function isLocalMembership(value: unknown): value is LocalMembership {
   return (
     typeof value === "object" &&
     value !== null &&
     "id" in value &&
-    typeof (value as Membership).id === "string"
+    typeof (value as LocalMembership).id === "string"
   );
 }
 
-function membershipFromEntry(item: unknown): Membership | undefined {
-  if (isMembership(item)) return item;
+function localMembershipFromEntry(item: unknown): LocalMembership | undefined {
+  if (isLocalMembership(item)) return item;
   if (!Array.isArray(item) || item.length < 2) return undefined;
   const key = item[0];
   const coId = typeof key === "string" ? key : undefined;
@@ -33,12 +33,12 @@ function membershipFromEntry(item: unknown): Membership | undefined {
     if ("t" in value) return undefined;
     if ("v" in value) {
       const inner = (value as { v?: unknown }).v;
-      if (isMembership(inner)) {
+      if (isLocalMembership(inner)) {
         return coId && !inner.id ? { ...inner, id: coId } : inner;
       }
     }
   }
-  if (isMembership(value)) {
+  if (isLocalMembership(value)) {
     return coId && !value.id ? { ...value, id: coId } : value;
   }
   return undefined;
@@ -46,7 +46,7 @@ function membershipFromEntry(item: unknown): Membership | undefined {
 
 /**
  * Walk an LSM DagList (or inline leaf list), mapping each entry.
- * Shared by membership CoMap walks and group participant walks.
+ * Shared by LocalMembership CoMap walks and CoMembers walks.
  */
 async function walkDagListEntries<T>(
   session: string,
@@ -82,124 +82,130 @@ async function walkDagListEntries<T>(
   return entries;
 }
 
-function membershipEntriesFromNode(node: unknown): Membership[] {
+function localMembershipEntriesFromNode(node: unknown): LocalMembership[] {
   if (node == null || typeof node !== "object") return [];
   const dag = node as DagNode;
-  const entries: Membership[] = [];
+  const entries: LocalMembership[] = [];
   for (const item of dag.l ?? []) {
-    const membership = membershipFromEntry(item);
+    const membership = localMembershipFromEntry(item);
     if (membership) entries.push(membership);
   }
   return entries;
 }
 
-async function membershipEntriesFromCoMapRoot(
+async function localMembershipEntriesFromCoMapRoot(
   session: string,
   root: unknown,
-): Promise<Membership[]> {
+): Promise<LocalMembership[]> {
   if (root == null) return [];
-  if (isCid(root)) return membershipEntriesFromCoMapRoot(session, await resolveCid(session, root));
+  if (isCid(root)) {
+    return localMembershipEntriesFromCoMapRoot(session, await resolveCid(session, root));
+  }
   if (typeof root !== "object") return [];
 
   const obj = root as Record<string, unknown>;
-  const activeEntries = await walkDagListEntries(session, obj.a, membershipFromEntry);
+  const activeEntries = await walkDagListEntries(session, obj.a, localMembershipFromEntry);
   if (activeEntries.length > 0) return activeEntries;
-  return membershipEntriesFromNode(obj.a ?? obj);
+  return localMembershipEntriesFromNode(obj.a ?? obj);
 }
 
-/** Normalize CO SDK CoMap / DagList membership data to a plain array. */
-function membershipList(raw: unknown): Membership[] {
+/** Normalize CO SDK CoMap / DagList LocalMembership data to a plain array. */
+function localMembershipList(raw: unknown): LocalMembership[] {
   if (raw == null) return [];
-  if (Array.isArray(raw)) return raw.filter(isMembership);
+  if (Array.isArray(raw)) return raw.filter(isLocalMembership);
   if (isCid(raw)) return [];
   if (typeof raw !== "object") return [];
 
   const obj = raw as Record<string, unknown>;
   if ("memberships" in obj && !("id" in obj)) {
-    return membershipList(obj.memberships);
+    return localMembershipList(obj.memberships);
   }
   if ("a" in obj || ("l" in obj && !("id" in obj))) {
-    return membershipEntriesFromNode("a" in obj ? obj.a : obj);
+    return localMembershipEntriesFromNode("a" in obj ? obj.a : obj);
   }
-  return Object.values(obj).filter(isMembership);
+  return Object.values(obj).filter(isLocalMembership);
 }
 
 /**
  * Resolve CoMap CID links and walk LSM active nodes — required for real CO storage
  * where `memberships` is a link, not an inline array.
  */
-export async function collectMembershipList(
+export async function collectLocalMemberships(
   session: string | undefined,
   raw: unknown,
-): Promise<Membership[]> {
+): Promise<LocalMembership[]> {
   if (raw == null || session === undefined) return [];
-  if (Array.isArray(raw)) return raw.filter(isMembership);
-  if (isCid(raw)) return membershipEntriesFromCoMapRoot(session, raw);
+  if (Array.isArray(raw)) return raw.filter(isLocalMembership);
+  if (isCid(raw)) return localMembershipEntriesFromCoMapRoot(session, raw);
   if (typeof raw !== "object") return [];
 
   const obj = raw as Record<string, unknown>;
   if ("memberships" in obj && !("id" in obj)) {
-    return collectMembershipList(session, obj.memberships);
+    return collectLocalMemberships(session, obj.memberships);
   }
   if ("a" in obj || (("l" in obj || "n" in obj) && !("id" in obj))) {
-    return membershipEntriesFromCoMapRoot(session, obj);
+    return localMembershipEntriesFromCoMapRoot(session, obj);
   }
-  return membershipList(raw);
+  return localMembershipList(raw);
 }
 
-export function membershipStateFor(membership: Membership, did?: Did): MembershipState | undefined {
+export function localMembershipStateFor(
+  membership: LocalMembership,
+  did?: Did,
+): LocalMembershipState | undefined {
   if (did !== undefined && membership.did?.[did] !== undefined) return membership.did[did];
-  const values = Object.values(membership.did ?? {}) as MembershipState[];
+  const values = Object.values(membership.did ?? {}) as LocalMembershipState[];
   if (values.length === 0) return undefined;
-  return Math.min(...values) as MembershipState;
+  return Math.min(...values) as LocalMembershipState;
 }
 
-/** Memberships that should appear in the chat sidebar (incl. in-progress joins and invites). */
-export function isSidebarMembership(membership: Membership, did?: Did): boolean {
-  const state = membershipStateFor(membership, did);
+/** Local memberships that should appear in the chat sidebar (incl. in-progress joins and invites). */
+export function isSidebarMembership(membership: LocalMembership, did?: Did): boolean {
+  const state = localMembershipStateFor(membership, did);
   return (
-    state === MembershipState.Active ||
-    state === MembershipState.Join ||
-    state === MembershipState.Pending ||
-    state === MembershipState.Invite
+    state === LocalMembershipState.Active ||
+    state === LocalMembershipState.Join ||
+    state === LocalMembershipState.Pending ||
+    state === LocalMembershipState.Invite
   );
 }
 
-export function activeParticipants(membership: Membership): Did[] {
+/** Active dids from a LocalMembership row’s `did` map (not the CO member roster). */
+export function activeDidsFromLocalMembership(membership: LocalMembership): Did[] {
   return Object.entries(membership.did ?? {})
-    .filter(([, state]) => state === MembershipState.Active)
+    .filter(([, state]) => state === LocalMembershipState.Active)
     .map(([did]) => did);
 }
 
 /**
- * Wire `Participant.state` is a Rust `#[repr(u8)]` (not the TS string enum).
- * Active = 0, Invite = 2.
+ * Wire CoMember row on the group CO `p` map.
+ * State is a Rust `#[repr(u8)]` (not the TS string enum): Active = 0, Invite = 2.
  */
-const PARTICIPANT_STATE_ACTIVE = 0;
-const PARTICIPANT_STATE_INVITE = 2;
+const CO_MEMBER_STATE_ACTIVE = 0;
+const CO_MEMBER_STATE_INVITE = 2;
 
-type CoParticipant = { did?: string; state?: number };
+type WireCoMember = { did?: string; state?: number };
 
-function participantFromEntry(item: unknown): CoParticipant | undefined {
+function coMemberFromEntry(item: unknown): WireCoMember | undefined {
   if (!Array.isArray(item) || item.length < 2) {
-    if (item && typeof item === "object" && "did" in item) return item as CoParticipant;
+    if (item && typeof item === "object" && "did" in item) return item as WireCoMember;
     return undefined;
   }
   const value = item[1];
   if (value && typeof value === "object") {
     if ("t" in value) return undefined;
     const inner = "v" in value ? (value as { v?: unknown }).v : value;
-    if (inner && typeof inner === "object") return inner as CoParticipant;
+    if (inner && typeof inner === "object") return inner as WireCoMember;
   }
   return undefined;
 }
 
-/** Walk the group CO `p` (participants) DagList once. */
-async function collectGroupParticipants(
+/** Walk the group CO `p` (CoMembers) DagList once. */
+async function collectWireCoMembers(
   session: string,
   coId: string,
-): Promise<CoParticipant[]> {
-  const [stateCid] = await getCoState(coId);
+): Promise<WireCoMember[]> {
+  const [stateCid] = await getCoTip(coId);
   if (!stateCid) return [];
   const co = (await resolveCid(session, stateCid)) as { p?: unknown };
   if (co.p == null) return [];
@@ -208,30 +214,31 @@ async function collectGroupParticipants(
   if (root == null || typeof root !== "object") return [];
 
   const obj = root as Record<string, unknown>;
-  return walkDagListEntries(session, obj.a ?? obj, participantFromEntry);
+  return walkDagListEntries(session, obj.a ?? obj, coMemberFromEntry);
 }
 
-export type GroupRoster = {
+/** People on a CO: active members + pending invitees. */
+export type CoMembers = {
   active: Did[];
   pending: Did[];
 };
 
 /**
- * Active members + pending invitees from the group CO participant list (one walk).
- * Local membership only tracks *your* state — do not use it for the full roster.
+ * Active members + pending invitees from the group CO member list (one walk).
+ * LocalMembership only tracks *your* state — do not use it for the full roster.
  */
-export async function collectGroupRoster(
+export async function collectCoMembers(
   session: string,
   coId: string,
-): Promise<GroupRoster> {
+): Promise<CoMembers> {
   try {
-    const entries = await collectGroupParticipants(session, coId);
+    const entries = await collectWireCoMembers(session, coId);
     const active: Did[] = [];
     const pending: Did[] = [];
     for (const p of entries) {
       if (typeof p.did !== "string") continue;
-      if (p.state === PARTICIPANT_STATE_ACTIVE) active.push(p.did);
-      else if (p.state === PARTICIPANT_STATE_INVITE) pending.push(p.did);
+      if (p.state === CO_MEMBER_STATE_ACTIVE) active.push(p.did);
+      else if (p.state === CO_MEMBER_STATE_INVITE) pending.push(p.did);
     }
     return { active, pending };
   } catch {

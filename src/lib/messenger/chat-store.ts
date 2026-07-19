@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import type { CID } from "multiformats";
 import {
   getActions,
-  getCoState,
+  getCoTip,
   getSharedCoSession,
   invalidateSharedCoSession,
   resolveCid,
@@ -242,7 +242,7 @@ export async function refreshChatFromCo(
     actionCount?: number;
     /** When true, mark unread 0 for this co (open chat). */
     selected?: boolean;
-    /** Prefer event payload over a fresh getCoState round-trip. */
+    /** Prefer event payload over a fresh getCoTip round-trip. */
     stateCid?: CID;
     heads?: CID[];
   },
@@ -253,7 +253,7 @@ export async function refreshChatFromCo(
     let stateCid = opts?.stateCid;
     let heads = opts?.heads;
     if (stateCid === undefined || heads === undefined) {
-      const fetched = await getCoState(coId);
+      const fetched = await getCoTip(coId);
       stateCid ??= fetched[0];
       heads ??= fetched[1];
     }

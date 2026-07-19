@@ -2,21 +2,49 @@
  * App-level additions on top of the published packages. We use this as the
  * single source of truth for the repo to track what’s missing in the COKIT SDK.
  *
- * Import CO SDK types, invoke helpers, and shared hooks from here — not from
- * `@1io/tauri-plugin-co-sdk` directly. Messenger domain logic stays in
- * `src/lib/messenger/`.
+ * Layers:
+ * - **Identity** — did:key + LocalMembership (my relationship to a CO)
+ * - **CO** — collaboration container (session, tip, resolve root)
+ * - **Core** — named data models inside a CO (actions, core tip / state)
+ *
+ * Import from here — not from `@1io/tauri-plugin-co-sdk` directly.
+ * Messenger domain logic stays in `src/lib/messenger/`.
  */
 
 export {
-  CO_CORE_NAME_MEMBERSHIP,
-  MembershipState,
+  LOCAL_MEMBERSHIP_CORE,
   type Did,
-  type Membership,
-  type Memberships,
-  type MembershipsAction,
-  Room,
+  type LocalMembership,
+  type LocalMemberships,
+  LocalMembershipState,
+  type LocalMembershipAction,
   type KeystoreKey,
-} from "./types";
+  createIdentity,
+  useIdentity,
+} from "./identity";
+
+export {
+  isTauriRuntimeAvailable,
+  getCoTip,
+  resolveCid,
+  createCo,
+  getSharedCoSession,
+  invalidateSharedCoSession,
+  listenCoState,
+  useCoSession,
+  useCoTip,
+  useResolveCid,
+  useCo,
+  Room,
+} from "./co";
+
+export {
+  pushAction,
+  getActions,
+  useCoreTip,
+  useCore,
+  DagList,
+} from "./core";
 
 export {
   errorDetail,
@@ -25,27 +53,3 @@ export {
   CoOperationError,
   formatCoError,
 } from "./errors";
-
-export {
-  isTauriRuntimeAvailable,
-  getCoState,
-  pushAction,
-  resolveCid,
-  getActions,
-  createIdentity,
-  createCo,
-} from "./invoke";
-
-export {
-  useCoSession,
-  useCo,
-  useCoreTipCid,
-  useResolveCid,
-  useDidKeyIdentity,
-} from "./hooks";
-
-export { getSharedCoSession, invalidateSharedCoSession } from "./session-cache";
-
-export { DagList } from "./dag-list";
-
-export { listenCoSdkState } from "./state-listener";
