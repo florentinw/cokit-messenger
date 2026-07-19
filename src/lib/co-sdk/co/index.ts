@@ -5,7 +5,6 @@ export { listenCoState } from "./state-listener";
 export { useCoSession, useCoTip, useResolveCid, useCo } from "./hooks";
 export { Room } from "@1io/tauri-plugin-co-sdk";
 export { CID } from "multiformats/cid";
-export { v4 as uuid } from "uuid";
 export {
   errorDetail,
   type CoErrorType,

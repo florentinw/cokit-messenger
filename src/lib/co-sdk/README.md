@@ -16,7 +16,7 @@ CoMembers         → people on a CO (messenger helpers; COKIT wire still uses P
 ```
 
 - App / messenger / component code must import from `@/lib/co-sdk/identity`, `@/lib/co-sdk/co`, or
-  `@/lib/co-sdk/core` — **not** from `@1io/tauri-plugin-co-sdk`, `multiformats`, or `uuid` directly.
+  `@/lib/co-sdk/core` — **not** from `@1io/tauri-plugin-co-sdk` or `multiformats` directly.
 - Only modules under this folder may import those packages.
 - Messenger domain (rooms, timeline, chat-store) stays in `src/lib/messenger/`.
 
@@ -25,7 +25,7 @@ CoMembers         → people on a CO (messenger helpers; COKIT wire still uses P
 | Path | Role |
 |------|------|
 | `identity/` | `createIdentity`, `useIdentity`, `LocalMembership*` aliases, `KeystoreKey` |
-| `co/` | session cache, `useCoTip` / `useCo`, `listenCoState`, `resolveCid`, `createCo`, `CID`, `uuid`, `formatCoError` |
+| `co/` | session cache, `useCoTip` / `useCo`, `listenCoState`, `resolveCid`, `createCo`, `CID`, `formatCoError` |
 | `core/` | `pushAction` / `getActions`, `useCoreTip` / `useCore`, `DagList` |
 
 ### Upstream gap candidates

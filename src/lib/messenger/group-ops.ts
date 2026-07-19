@@ -1,10 +1,10 @@
+import { v4 as uuid } from "uuid";
 import {
   CID,
   createCo,
   getCoTip,
   getSharedCoSession,
   resolveCid,
-  uuid,
 } from "@/lib/co-sdk/co";
 import {
   LOCAL_MEMBERSHIP_CORE,
