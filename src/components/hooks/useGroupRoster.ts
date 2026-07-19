@@ -10,7 +10,7 @@ import {
   listenCoSdkState,
   MembershipState,
   type Membership,
-} from "../../lib/co-sdk";
+} from "../../lib/co-sdk-extras";
 
 /** Load active participants + pending invites for the open group details pane. */
 export function useGroupRoster(

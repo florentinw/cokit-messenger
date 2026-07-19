@@ -2,7 +2,7 @@ import {
   CO_CORE_NAME_CO,
   type ReducerAction,
   reducerActionFrom,
-} from "../co-sdk";
+} from "../co-sdk-extras";
 import type { MatrixEvent, RoomSystemEvent } from "./types";
 
 export type ChatMessageItem = {

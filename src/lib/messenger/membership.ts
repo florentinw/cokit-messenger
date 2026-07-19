@@ -1,12 +1,13 @@
 import { CID } from "multiformats/cid";
 import {
+  asDagNode,
   DagList,
   getCoState,
   MembershipState,
   resolveCid,
   type Did,
   type Membership,
-} from "../co-sdk";
+} from "../co-sdk-extras";
 
 type DagNode = { n?: unknown[]; l?: unknown[] };
 
@@ -66,7 +67,10 @@ async function membershipEntriesFromDagNode(
   const dag = node as DagNode;
   if (!("n" in dag) && !("l" in dag)) return membershipEntriesFromNode(node);
 
-  const list = new DagList<unknown>(dag as { n?: CID[]; l?: unknown[] }, session);
+  const list = new DagList<unknown>(
+    asDagNode(dag as { n?: CID[]; l?: unknown[] }),
+    session,
+  );
   const entries: Membership[] = [];
   for (let index = 0; ; index++) {
     const item = await list.get(index);
@@ -206,7 +210,10 @@ async function collectGroupParticipants(
   if (dagRoot && typeof dagRoot === "object") {
     const dag = dagRoot as DagNode;
     if ("n" in dag || "l" in dag) {
-      const list = new DagList<unknown>(dag as { n?: CID[]; l?: unknown[] }, session);
+      const list = new DagList<unknown>(
+    asDagNode(dag as { n?: CID[]; l?: unknown[] }),
+    session,
+  );
       for (let index = 0; ; index++) {
         const item = await list.get(index);
         if (item === undefined) break;

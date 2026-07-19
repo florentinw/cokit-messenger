@@ -7,7 +7,7 @@ import {
   resolveCid,
   type Did,
   type Membership,
-} from "../co-sdk";
+} from "../co-sdk-extras";
 import {
   isGroupAvatarColor,
   type GroupAvatarColor,

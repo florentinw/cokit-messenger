@@ -6,7 +6,7 @@ import {
   useCoStateRevision,
   useResolveCid,
   resolveCid,
-} from "../../lib/co-sdk";
+} from "../../lib/co-sdk-extras";
 import {
   dateChipLabel,
   ensureRoomCore,

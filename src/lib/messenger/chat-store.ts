@@ -7,7 +7,7 @@ import {
   invalidateSharedCoSession,
   resolveActionsParallel,
   resolveCid,
-} from "../co-sdk";
+} from "../co-sdk-extras";
 import type { GroupAvatarColor } from "./group-avatar";
 import {
   avatarColorFromCoTags,
