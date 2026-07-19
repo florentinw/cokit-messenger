@@ -90,9 +90,7 @@ function NewGroupDraftItem({
       <GroupAvatar color={color} className="size-12" />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="type-body truncate text-foreground">{title}</span>
-        <p className="h-9 min-w-0 line-clamp-2 type-body-regular text-muted">
-          No messages yet
-        </p>
+        <p className="h-9 min-w-0 line-clamp-2 type-body-regular text-muted" />
       </div>
     </Button>
   );
