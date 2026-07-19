@@ -33,6 +33,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Compute next patch version
         id: bump
@@ -81,6 +82,23 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      # tauri-action@v1 does not accept a `version` input — write it into the
+      # config files and pass an explicit tag so we don't keep overwriting v0.1.0.
+      - name: Apply release version
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          jq --arg v "$VERSION" '.version = $v' package.json > package.json.tmp
+          mv package.json.tmp package.json
+          jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+          sed -i.bak -E "s/^version = \"[0-9]+\\.[0-9]+\\.[0-9]+\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
+          rm -f src-tauri/Cargo.toml.bak
+          echo "package.json=$(jq -r .version package.json)"
+          echo "tauri.conf.json=$(jq -r .version src-tauri/tauri.conf.json)"
+          grep -E '^version = ' src-tauri/Cargo.toml
+
       - name: Build and upload release
         uses: tauri-apps/tauri-action@v1
         env:
@@ -89,9 +107,8 @@ jobs:
           # with repo secrets and remove APPLE_SIGNING_IDENTITY="-" from tauri.conf.json.
           APPLE_SIGNING_IDENTITY: "-"
         with:
-          version: ${{ needs.version.outputs.version }}
-          tagName: v__VERSION__
-          releaseName: CO Messenger v__VERSION__
+          tagName: v${{ needs.version.outputs.version }}
+          releaseName: CO Messenger v${{ needs.version.outputs.version }}
           releaseBody: |
             Automated macOS (Apple Silicon) build from `main` (ad-hoc signed, **not** notarized).
 
