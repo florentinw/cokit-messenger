@@ -4,9 +4,9 @@ import {
   MenuTrigger,
   Popover,
 } from "react-aria-components";
-import { cn } from "../../lib/utils";
-import { Button } from "./Button";
-import { Icon } from "./icons/Icon";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/global/Button";
+import { Icon } from "@/components/global/icons/Icon";
 
 type Action = {
   id: string;

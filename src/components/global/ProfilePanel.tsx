@@ -3,14 +3,14 @@ import {
   readProfileName,
   truncateDid,
   writeProfileName,
-} from "../../lib/messenger";
-import { useOverflowHeaderBorder } from "../../lib/useOverflowHeaderBorder";
-import { Button } from "./Button";
+} from "@/lib/messenger";
+import { useOverflowHeaderBorder } from "@/lib/useOverflowHeaderBorder";
+import { Button } from "@/components/global/Button";
 import {
   ContentPaneHeader,
   ContentPaneShell,
-} from "./ContentPaneHeader";
-import { Icon } from "./icons/Icon";
+} from "@/components/global/ContentPaneHeader";
+import { Icon } from "@/components/global/icons/Icon";
 
 type Props = {
   identity?: string;

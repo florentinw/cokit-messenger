@@ -5,9 +5,9 @@ import {
   GROUP_AVATAR_SRC,
   useChatEntry,
   type GroupAvatarColor,
-} from "../../lib/messenger";
-import { AppDialog } from "./AppDialog";
-import { Button } from "./Button";
+} from "@/lib/messenger";
+import { AppDialog } from "@/components/global/AppDialog";
+import { Button } from "@/components/global/Button";
 import { useState } from "react";
 
 type Props = {

@@ -2,17 +2,17 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   DEFAULT_GROUP_AVATAR_COLOR,
   type GroupAvatarColor,
-} from "../../lib/messenger";
-import { useOverflowHeaderBorder } from "../../lib/useOverflowHeaderBorder";
-import { Button } from "../global/Button";
+} from "@/lib/messenger";
+import { useOverflowHeaderBorder } from "@/lib/useOverflowHeaderBorder";
+import { Button } from "@/components/global/Button";
 import {
   ContentPaneHeader,
   ContentPaneShell,
-} from "../global/ContentPaneHeader";
-import { GroupAvatarColorPicker } from "../global/GroupAvatar";
-import { Icon } from "../global/icons/Icon";
-import { CoMemberRow } from "../global/CoMemberRow";
-import { InviteCoMemberDialog } from "./InviteCoMemberDialog";
+} from "@/components/global/ContentPaneHeader";
+import { GroupAvatarColorPicker } from "@/components/global/GroupAvatar";
+import { Icon } from "@/components/global/icons/Icon";
+import { CoMemberRow } from "@/components/global/CoMemberRow";
+import { InviteCoMemberDialog } from "@/components/chat-details/InviteCoMemberDialog";
 
 export type CreateDraft = {
   name: string;

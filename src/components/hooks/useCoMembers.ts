@@ -3,7 +3,7 @@ import {
   activeDidsFromLocalMembership,
   collectCoMembers,
   localMembershipStateFor,
-} from "../../lib/messenger";
+} from "@/lib/messenger";
 import { LocalMembershipState, type LocalMembership } from "@/lib/co-sdk/identity";
 import { getSharedCoSession, listenCoState } from "@/lib/co-sdk/co";
 

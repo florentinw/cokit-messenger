@@ -1,4 +1,4 @@
-import { sessionClose, sessionOpen } from "./invoke";
+import { sessionClose, sessionOpen } from "@/lib/co-sdk/co/invoke";
 
 /** One open session per CO for the app lifetime — avoids StrictMode close/reopen races. */
 const sessions = new Map<string, Promise<string>>();

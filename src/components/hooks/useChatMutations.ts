@@ -13,10 +13,10 @@ import {
   revokeCoMemberInvite,
   setGroupAvatarColor,
   type GroupAvatarColor,
-} from "../../lib/messenger";
+} from "@/lib/messenger";
 import { LocalMembershipState, type LocalMembership } from "@/lib/co-sdk/identity";
 import { invalidateSharedCoSession } from "@/lib/co-sdk/co";
-import type { Pane } from "../pane";
+import type { Pane } from "@/components/pane";
 
 type Nav = {
   openChat: (id: string) => void;

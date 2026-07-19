@@ -1,14 +1,14 @@
 import type { ComponentType, SVGProps } from "react";
-import ArrowUpIcon from "./svgs/arrow-up.svg?react";
-import BackIcon from "./svgs/back.svg?react";
-import CheckIcon from "./svgs/check.svg?react";
-import CopyIcon from "./svgs/copy.svg?react";
-import InfoIcon from "./svgs/info.svg?react";
-import MoreIcon from "./svgs/more.svg?react";
-import PlusBtnIcon from "./svgs/plus-btn.svg?react";
-import SettingsIcon from "./svgs/settings.svg?react";
-import UserIcon from "./svgs/user.svg?react";
-import UsersIcon from "./svgs/users.svg?react";
+import ArrowUpIcon from "@/components/global/icons/svgs/arrow-up.svg?react";
+import BackIcon from "@/components/global/icons/svgs/back.svg?react";
+import CheckIcon from "@/components/global/icons/svgs/check.svg?react";
+import CopyIcon from "@/components/global/icons/svgs/copy.svg?react";
+import InfoIcon from "@/components/global/icons/svgs/info.svg?react";
+import MoreIcon from "@/components/global/icons/svgs/more.svg?react";
+import PlusBtnIcon from "@/components/global/icons/svgs/plus-btn.svg?react";
+import SettingsIcon from "@/components/global/icons/svgs/settings.svg?react";
+import UserIcon from "@/components/global/icons/svgs/user.svg?react";
+import UsersIcon from "@/components/global/icons/svgs/users.svg?react";
 
 const icons = {
   "arrow-up": ArrowUpIcon,

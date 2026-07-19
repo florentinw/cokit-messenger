@@ -3,7 +3,7 @@ import {
   collectLocalMemberships,
   isSidebarMembership,
   localMembershipStateFor,
-} from "../../lib/messenger";
+} from "@/lib/messenger";
 import {
   LocalMembershipState,
   type LocalMembership,

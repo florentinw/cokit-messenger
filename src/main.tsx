@@ -1,10 +1,10 @@
 import "web-streams-polyfill/polyfill";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import App from "@/App";
 import { isTauri } from "@tauri-apps/api/core";
-import { initTheme } from "./lib/theme";
-import "./styles/app.css";
+import { initTheme } from "@/lib/theme";
+import "@/styles/app.css";
 
 initTheme();
 

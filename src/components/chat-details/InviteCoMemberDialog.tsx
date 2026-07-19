@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Input, Label, TextField } from "react-aria-components";
-import { AppDialog } from "../global/AppDialog";
-import { Button } from "../global/Button";
+import { AppDialog } from "@/components/global/AppDialog";
+import { Button } from "@/components/global/Button";
 
 type Props = {
   open: boolean;

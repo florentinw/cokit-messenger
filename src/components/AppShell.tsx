@@ -12,7 +12,7 @@ import {
   TAURI_REQUIRED_MESSAGE,
   truncateDid,
   useChatStoreRevision,
-} from "../lib/messenger";
+} from "@/lib/messenger";
 import {
   LOCAL_MEMBERSHIP_CORE,
   LocalMembershipState,
@@ -26,22 +26,22 @@ import {
   useCoSession,
 } from "@/lib/co-sdk/co";
 import { useCore } from "@/lib/co-sdk/core";
-import { ChatPane } from "./chat/ChatPane";
-import { ChatSidebar, type ChatListRow } from "./sidebar/ChatSidebar";
-import { GroupDetails } from "./chat-details/GroupDetails";
-import { IdentityLoadingScreen } from "./global/IdentityLoadingScreen";
-import { InviteAcceptPane } from "./chat/InviteAcceptPane";
-import { NewGroupPanel, type CreateDraft } from "./chat-details/NewGroupPanel";
-import { ProfilePanel } from "./global/ProfilePanel";
-import { CorruptStorageHint, ErrorCard } from "./global/ErrorCard";
-import { useMemberships } from "./hooks/useMemberships";
+import { ChatPane } from "@/components/chat/ChatPane";
+import { ChatSidebar, type ChatListRow } from "@/components/sidebar/ChatSidebar";
+import { GroupDetails } from "@/components/chat-details/GroupDetails";
+import { IdentityLoadingScreen } from "@/components/global/IdentityLoadingScreen";
+import { InviteAcceptPane } from "@/components/chat/InviteAcceptPane";
+import { NewGroupPanel, type CreateDraft } from "@/components/chat-details/NewGroupPanel";
+import { ProfilePanel } from "@/components/global/ProfilePanel";
+import { CorruptStorageHint, ErrorCard } from "@/components/global/ErrorCard";
+import { useMemberships } from "@/components/hooks/useMemberships";
 import {
   useChatHydration,
   useChatStateMultiplexer,
-} from "./hooks/useChatPipeline";
-import { useCoMembers } from "./hooks/useCoMembers";
-import { useChatMutations } from "./hooks/useChatMutations";
-import { paneChatId, type Pane } from "./pane";
+} from "@/components/hooks/useChatPipeline";
+import { useCoMembers } from "@/components/hooks/useCoMembers";
+import { useChatMutations } from "@/components/hooks/useChatMutations";
+import { paneChatId, type Pane } from "@/components/pane";
 
 export function AppShell() {
   const { sessionId: localSession, error: sessionError } = useCoSession("local");

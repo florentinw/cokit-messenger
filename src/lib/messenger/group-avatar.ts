@@ -1,4 +1,4 @@
-import groupAvatarUrl from "./group-avatar.svg?url";
+import groupAvatarUrl from "@/lib/messenger/group-avatar.svg?url";
 
 export const GROUP_AVATAR_SRC = groupAvatarUrl;
 

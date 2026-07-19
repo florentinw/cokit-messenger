@@ -11,16 +11,16 @@ import {
   subscribeProfileName,
   truncateDid,
   type GroupAvatarColor,
-} from "../../lib/messenger";
-import { cn } from "../../lib/utils";
-import { Button } from "../global/Button";
-import { GroupAvatar } from "../global/GroupAvatar";
-import { EmptyState } from "./EmptyState";
-import { ChatListItem } from "./ChatListItem";
-import { Icon } from "../global/icons/Icon";
-import type { ChatListRow } from "./chat-list-types";
+} from "@/lib/messenger";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/global/Button";
+import { GroupAvatar } from "@/components/global/GroupAvatar";
+import { EmptyState } from "@/components/sidebar/EmptyState";
+import { ChatListItem } from "@/components/sidebar/ChatListItem";
+import { Icon } from "@/components/global/icons/Icon";
+import type { ChatListRow } from "@/components/sidebar/chat-list-types";
 
-export type { ChatListRow } from "./chat-list-types";
+export type { ChatListRow } from "@/components/sidebar/chat-list-types";
 
 type Props = {
   invites: ChatListRow[];

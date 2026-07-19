@@ -12,20 +12,20 @@ import {
   type LocalMembershipAction,
 } from "@/lib/co-sdk/identity";
 import { pushAction } from "@/lib/co-sdk/core";
-import { type GroupAvatarColor } from "./group-avatar";
-import { readProfileName } from "./profile";
+import { type GroupAvatarColor } from "@/lib/messenger/group-avatar";
+import { readProfileName } from "@/lib/messenger/profile";
 import {
   nameFromCoTags,
   setCoGroupAvatarColor,
   setCoGroupNameTag,
   setCoMemberDisplayName,
-} from "./tags";
+} from "@/lib/messenger/tags";
 import {
   CO_CORE,
   ROOM_CORE,
   ROOM_CORE_BINARY_CID,
   type MatrixEvent,
-} from "./types";
+} from "@/lib/messenger/types";
 
 export async function createGroupChat(
   identity: Did,

@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { formatCoError } from "@/lib/co-sdk/co";
-import { Button } from "../global/Button";
-import { Icon } from "../global/icons/Icon";
+import { Button } from "@/components/global/Button";
+import { Icon } from "@/components/global/icons/Icon";
 
 type Props = {
   disabled?: boolean;

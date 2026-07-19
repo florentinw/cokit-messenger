@@ -6,7 +6,7 @@ import {
   sessionOpen as sdkSessionOpen,
 } from "@1io/tauri-plugin-co-sdk";
 import type { CID } from "multiformats";
-import { assertTauriRuntime } from "./runtime";
+import { assertTauriRuntime } from "@/lib/co-sdk/co/runtime";
 
 /**
  * Open a CO session for `coId` (requires Tauri).

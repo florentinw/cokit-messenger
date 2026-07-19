@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Icon } from "./icons/Icon";
-import { CoMemberLabel } from "./CoMemberLabel";
+import { Icon } from "@/components/global/icons/Icon";
+import { CoMemberLabel } from "@/components/global/CoMemberLabel";
 
 type Props = {
   did: string;

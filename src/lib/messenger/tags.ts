@@ -9,8 +9,8 @@ import { pushAction } from "@/lib/co-sdk/core";
 import {
   isGroupAvatarColor,
   type GroupAvatarColor,
-} from "./group-avatar";
-import { getPeerName, rememberPeerName, rememberPeerNames } from "./peer-names";
+} from "@/lib/messenger/group-avatar";
+import { getPeerName, rememberPeerName, rememberPeerNames } from "@/lib/messenger/peer-names";
 import {
   CO_CORE,
   CO_TAG_DISPLAY_NAME_PREFIX,
@@ -19,7 +19,7 @@ import {
   CO_TAG_INVITER_DID,
   CO_TAG_INVITER_NAME,
   displayNameTagKey,
-} from "./types";
+} from "@/lib/messenger/types";
 
 function tagValueAsString(value: unknown): string | undefined {
   if (typeof value === "string") return value;

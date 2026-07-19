@@ -4,19 +4,19 @@ import {
   truncateDid,
   useChatEntry,
   type GroupAvatarColor,
-} from "../../lib/messenger";
-import { useOverflowHeaderBorder } from "../../lib/useOverflowHeaderBorder";
-import { ActionMenu } from "../global/ActionMenu";
-import { Button } from "../global/Button";
-import { ConfirmDialog } from "../global/ConfirmDialog";
+} from "@/lib/messenger";
+import { useOverflowHeaderBorder } from "@/lib/useOverflowHeaderBorder";
+import { ActionMenu } from "@/components/global/ActionMenu";
+import { Button } from "@/components/global/Button";
+import { ConfirmDialog } from "@/components/global/ConfirmDialog";
 import {
   ContentPaneHeader,
   ContentPaneShell,
-} from "../global/ContentPaneHeader";
-import { GroupAvatarColorPicker } from "../global/GroupAvatar";
-import { Icon } from "../global/icons/Icon";
-import { CoMemberRow } from "../global/CoMemberRow";
-import { InviteCoMemberDialog } from "./InviteCoMemberDialog";
+} from "@/components/global/ContentPaneHeader";
+import { GroupAvatarColorPicker } from "@/components/global/GroupAvatar";
+import { Icon } from "@/components/global/icons/Icon";
+import { CoMemberRow } from "@/components/global/CoMemberRow";
+import { InviteCoMemberDialog } from "@/components/chat-details/InviteCoMemberDialog";
 
 type Props = {
   coId: string;

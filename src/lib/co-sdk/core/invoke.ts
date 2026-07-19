@@ -4,8 +4,8 @@ import {
   type GetActionsResponse,
 } from "@1io/tauri-plugin-co-sdk";
 import type { CID } from "multiformats";
-import { CoOperationError, formatCoError } from "../co/errors";
-import { assertTauriRuntime } from "../co/runtime";
+import { CoOperationError, formatCoError } from "@/lib/co-sdk/co/errors";
+import { assertTauriRuntime } from "@/lib/co-sdk/co/runtime";
 
 /**
  * Push a reducer action onto a named core.

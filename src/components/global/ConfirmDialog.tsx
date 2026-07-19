@@ -1,5 +1,5 @@
-import { Button } from "./Button";
-import { AppDialog } from "./AppDialog";
+import { Button } from "@/components/global/Button";
+import { AppDialog } from "@/components/global/AppDialog";
 
 type Props = {
   open: boolean;

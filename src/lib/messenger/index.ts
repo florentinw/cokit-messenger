@@ -1,13 +1,13 @@
 /** Messenger domain: room model, chat ops, profile/unread helpers. */
 
-export * from "./types";
-export * from "./format";
-export * from "./membership";
-export * from "./tags";
-export * from "./group-ops";
-export * from "./timeline";
-export * from "./group-avatar";
-export * from "./profile";
-export * from "./peer-names";
-export * from "./unread";
-export * from "./chat-store";
+export * from "@/lib/messenger/types";
+export * from "@/lib/messenger/format";
+export * from "@/lib/messenger/membership";
+export * from "@/lib/messenger/tags";
+export * from "@/lib/messenger/group-ops";
+export * from "@/lib/messenger/timeline";
+export * from "@/lib/messenger/group-avatar";
+export * from "@/lib/messenger/profile";
+export * from "@/lib/messenger/peer-names";
+export * from "@/lib/messenger/unread";
+export * from "@/lib/messenger/chat-store";

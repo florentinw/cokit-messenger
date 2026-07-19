@@ -10,7 +10,7 @@ import {
   localMembershipStateFor,
   refreshChatFromCo,
   refreshChatsFromCo,
-} from "../../lib/messenger";
+} from "@/lib/messenger";
 import { LocalMembershipState, type LocalMembership } from "@/lib/co-sdk/identity";
 
 /** Hydrate ChatStore for sidebar LocalMemberships (invites + active chats). */
