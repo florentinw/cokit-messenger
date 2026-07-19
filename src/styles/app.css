@@ -34,7 +34,7 @@
   --radius-list-item: 12px;
   --radius-avatar: 8px;
   --radius-composer: 16px;
-  --sidebar-blur: 50px;
+  --sidebar-blur: 32px;
 
   /* Warm cream wash over glass — reads like the mock sidebar. */
   --color-sidebar-tint: color-mix(
@@ -92,8 +92,13 @@
     --status-error: var(--color-red-500);
     --status-success: var(--color-green-500);
 
-    --color-sidebar-tint: rgba(255, 255, 255, 0.06);
-    --color-avatar-border: rgba(0, 0, 0, 0.1);
+    /* Dark wash over vibrancy — light enough that glass still reads through. */
+    --color-sidebar-tint: color-mix(
+      in srgb,
+      #000000 18%,
+      transparent
+    );
+    --color-avatar-border: rgba(255, 255, 255, 0.1);
     --color-avatar-bg: #000000;
   }
 }
@@ -129,7 +134,8 @@
     --layer-muted: rgba(255, 255, 255, 0.55);
     --layer-foreground: var(--color-warm-white);
     --layer-separator: rgba(255, 255, 255, 0.1);
-    --interactive-mix-step: 8%;
+    /* Subdued hover on glass (2% → ~5% white); 8% step was ~20% and too bright. */
+    --interactive-mix-step: 2%;
     --surface-selected: rgba(255, 255, 255, 0.08);
   }
 }
@@ -146,7 +152,7 @@
     --layer-muted: rgba(255, 255, 255, 0.55);
     --layer-foreground: var(--color-warm-white);
     --layer-separator: rgba(255, 255, 255, 0.12);
-    --interactive-mix-step: 7%;
+    --interactive-mix-step: 4%;
   }
 }
 
