@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
-import { formatCoError } from "../../lib/co-sdk-extras";
+import { formatCoError } from "@/lib/co-sdk/co";
 import { Button } from "../global/Button";
 import { Icon } from "../global/icons/Icon";
 

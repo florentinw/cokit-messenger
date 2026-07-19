@@ -2,14 +2,11 @@ import { CID } from "multiformats/cid";
 import { v4 as uuid } from "uuid";
 import {
   LOCAL_MEMBERSHIP_CORE,
-  createCo,
-  getCoTip,
-  getSharedCoSession,
-  pushAction,
-  resolveCid,
   type Did,
   type LocalMembershipAction,
-} from "../co-sdk-extras";
+} from "@/lib/co-sdk/identity";
+import { createCo, getCoTip, getSharedCoSession, resolveCid } from "@/lib/co-sdk/co";
+import { pushAction } from "@/lib/co-sdk/core";
 import { type GroupAvatarColor } from "./group-avatar";
 import { readProfileName } from "./profile";
 import {

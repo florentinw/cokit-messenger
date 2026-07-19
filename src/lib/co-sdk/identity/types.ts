@@ -1,7 +1,7 @@
 /**
  * Identity types: did:key + LocalMembership (my relationship to a CO).
  *
- * App code must import these from `co-sdk-extras` — never from
+ * App code must import these from `@/lib/co-sdk/identity` — never from
  * `@1io/tauri-plugin-co-sdk` directly.
  */
 

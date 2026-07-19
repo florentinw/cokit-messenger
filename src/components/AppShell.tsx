@@ -16,14 +16,16 @@ import {
 import {
   LOCAL_MEMBERSHIP_CORE,
   LocalMembershipState,
+  useIdentity,
+  type LocalMemberships,
+} from "@/lib/co-sdk/identity";
+import {
   errorDetail,
   formatCoError,
   isTauriRuntimeAvailable,
   useCoSession,
-  useCore,
-  useIdentity,
-  type LocalMemberships,
-} from "../lib/co-sdk-extras";
+} from "@/lib/co-sdk/co";
+import { useCore } from "@/lib/co-sdk/core";
 import { ChatPane } from "./chat/ChatPane";
 import { ChatSidebar, type ChatListRow } from "./sidebar/ChatSidebar";
 import { GroupDetails } from "./chat-details/GroupDetails";

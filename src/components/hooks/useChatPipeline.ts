@@ -8,11 +8,8 @@ import {
   refreshChatFromCo,
   refreshChatsFromCo,
 } from "../../lib/messenger";
-import {
-  LocalMembershipState,
-  listenCoState,
-  type LocalMembership,
-} from "../../lib/co-sdk-extras";
+import { LocalMembershipState, type LocalMembership } from "@/lib/co-sdk/identity";
+import { listenCoState } from "@/lib/co-sdk/co";
 
 /** Hydrate ChatStore for sidebar LocalMemberships (invites + active chats). */
 export function useChatHydration(

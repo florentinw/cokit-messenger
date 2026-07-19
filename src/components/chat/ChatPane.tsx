@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  useCoTip,
-  useCore,
-  useCoSession,
-  resolveCid,
-} from "../../lib/co-sdk-extras";
+import { useCoTip, useCoSession, resolveCid } from "@/lib/co-sdk/co";
+import { useCore } from "@/lib/co-sdk/core";
 import {
   dateChipLabel,
   ensureRoomCore,

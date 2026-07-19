@@ -1,12 +1,7 @@
 import { CID } from "multiformats/cid";
-import {
-  getCoTip,
-  getSharedCoSession,
-  pushAction,
-  resolveCid,
-  type Did,
-  type LocalMembership,
-} from "../co-sdk-extras";
+import { type Did, type LocalMembership } from "@/lib/co-sdk/identity";
+import { getCoTip, getSharedCoSession, resolveCid } from "@/lib/co-sdk/co";
+import { pushAction } from "@/lib/co-sdk/core";
 import {
   isGroupAvatarColor,
   type GroupAvatarColor,

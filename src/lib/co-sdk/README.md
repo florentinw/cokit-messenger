@@ -15,8 +15,8 @@ Core              → named model inside a CO (push/get actions, core tip / stat
 CoMembers         → people on a CO (messenger helpers; COKIT wire still uses Participant* actions)
 ```
 
-- App / messenger / component code must import from `src/lib/co-sdk-extras` —
-  **not** from `@1io/tauri-plugin-co-sdk` directly.
+- App / messenger / component code must import from `@/lib/co-sdk/identity`, `@/lib/co-sdk/co`, or
+  `@/lib/co-sdk/core` — **not** from this folder’s barrel or `@1io/tauri-plugin-co-sdk`.
 - Only modules under this folder may import `@1io/tauri-plugin-co-sdk`.
 - Messenger domain (rooms, timeline, chat-store) stays in `src/lib/messenger/`.
 
@@ -36,7 +36,8 @@ CoMembers         → people on a CO (messenger helpers; COKIT wire still uses P
 - SWR hooks: tip vs decoded data for CO (`useCoTip` / `useCo`) and Core (`useCoreTip` / `useCore`)
 - Clearer names vs SDK (`LocalMembership` vs `Membership`)
 
-The public surface is the explicit named exports in `index.ts`. Every exported
+Public imports use `@/lib/co-sdk/identity`, `@/lib/co-sdk/co`, and `@/lib/co-sdk/core`
+(via the `@/*` → `src/*` alias). `index.ts` is an internal barrel only. Every exported
 function documents `@param` / `@returns` on the defining module.
 
 **Note:** `@1io/compare` is not on the public npm registry; we vendor a minimal stub under `vendor/compare` so installs work outside the 1io intranet.
