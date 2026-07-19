@@ -87,9 +87,9 @@ export function AppShell() {
   useChatStateMultiplexer(activeIdsRef, selectedIdRef, identityRef);
 
   useEffect(() => {
-    if (!localSession || !identity) return;
-    void hydrateProfileName(localSession, identity);
-  }, [localSession, identity]);
+    if (!localSession) return;
+    void hydrateProfileName(localSession);
+  }, [localSession]);
 
   const selectedMembership = memberships.find((m) => m.id === focusedId);
   const { selectedMembers, selectedPendingInvites, bumpRoster } = useCoMembers(
