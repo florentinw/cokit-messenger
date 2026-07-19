@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -19,12 +18,13 @@ import { GroupAvatar } from "../global/GroupAvatar";
 import { EmptyState } from "./EmptyState";
 import { ChatListItem } from "./ChatListItem";
 import { Icon } from "../global/icons/Icon";
-import type { ChatListEntry } from "./chat-list-types";
+import type { ChatListRow } from "./chat-list-types";
 
-export type { ChatListEntry } from "./chat-list-types";
+export type { ChatListRow } from "./chat-list-types";
 
 type Props = {
-  chats: ChatListEntry[];
+  invites: ChatListRow[];
+  chats: ChatListRow[];
   selectedId?: string;
   creating?: boolean;
   createDraftName?: string;
@@ -99,6 +99,7 @@ function NewGroupDraftItem({
 }
 
 export function ChatSidebar({
+  invites,
   chats,
   selectedId,
   creating = false,
@@ -172,16 +173,7 @@ export function ChatSidebar({
     };
   }, [resizing]);
 
-  const invites = useMemo(() => chats.filter((chat) => chat.invited), [chats]);
-  const activeChats = useMemo(
-    () =>
-      chats
-        .filter((chat) => !chat.invited)
-        .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0)),
-    [chats],
-  );
-
-  const showEmpty = chats.length === 0 && !creating;
+  const showEmpty = invites.length === 0 && chats.length === 0 && !creating;
 
   return (
     <aside
@@ -216,12 +208,12 @@ export function ChatSidebar({
                 >
                   Invites
                 </h2>
-                {invites.map((chat) => (
+                {invites.map((row) => (
                   <ChatListItem
-                    key={chat.coId}
-                    chat={chat}
-                    selected={!creating && chat.coId === selectedId}
-                    onSelect={() => onSelect(chat.coId)}
+                    key={row.id}
+                    row={row}
+                    selected={!creating && row.id === selectedId}
+                    onSelect={() => onSelect(row.id)}
                   />
                 ))}
               </section>
@@ -247,12 +239,12 @@ export function ChatSidebar({
                   onSelect={onCreate}
                 />
               )}
-              {activeChats.map((chat) => (
+              {chats.map((row) => (
                 <ChatListItem
-                  key={chat.coId}
-                  chat={chat}
-                  selected={!creating && chat.coId === selectedId}
-                  onSelect={() => onSelect(chat.coId)}
+                  key={row.id}
+                  row={row}
+                  selected={!creating && row.id === selectedId}
+                  onSelect={() => onSelect(row.id)}
                 />
               ))}
             </section>

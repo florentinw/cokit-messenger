@@ -1,31 +1,17 @@
-import { formatChatTime } from "../../lib/messenger";
 import { cn } from "../../lib/utils";
 import { Button } from "../global/Button";
 import { GroupAvatar } from "../global/GroupAvatar";
-import type { ChatListEntry } from "./chat-list-types";
+import type { ChatListRow } from "./chat-list-types";
 
 type Props = {
-  chat: ChatListEntry;
+  row: ChatListRow;
   selected?: boolean;
   onSelect: () => void;
 };
 
-export function ChatListItem({ chat, selected, onSelect }: Props) {
-  const {
-    coId,
-    name,
-    color,
-    preview,
-    timestamp,
-    unread,
-    invited,
-    joining,
-    inviterName,
-  } = chat;
-  const hasUnread = !invited && !joining && (unread ?? 0) > 0;
-  const invitePreview = inviterName
-    ? `${inviterName} invited you`
-    : "You’ve been invited to this group";
+export function ChatListItem({ row, selected, onSelect }: Props) {
+  const { id, title, subtitle, meta, badge, color } = row;
+  const showBadge = (badge ?? 0) > 0;
 
   return (
     <Button
@@ -36,48 +22,38 @@ export function ChatListItem({ chat, selected, onSelect }: Props) {
         selected ? "bg-surface-selected" : "interactive",
       )}
     >
-      <GroupAvatar coId={coId} color={color} className="size-12" />
+      <GroupAvatar coId={id} color={color} className="size-12" />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <span
             className={cn(
               "type-body truncate text-foreground",
-              hasUnread && "font-semibold",
+              showBadge && "font-semibold",
             )}
           >
-            {name}
+            {title}
           </span>
-          {invited || joining ? (
-            <span className="shrink-0 type-body-regular text-muted">
-              {joining ? "Joining" : "Invited"}
+          {meta !== undefined && (
+            <span
+              className={cn(
+                "shrink-0 type-body-regular",
+                showBadge ? "text-foreground" : "text-muted",
+              )}
+            >
+              {meta}
             </span>
-          ) : (
-            timestamp !== undefined && (
-              <span
-                className={cn(
-                  "shrink-0 type-body-regular",
-                  hasUnread ? "text-foreground" : "text-muted",
-                )}
-              >
-                {formatChatTime(timestamp)}
-              </span>
-            )
           )}
         </div>
         <div className="flex h-9 items-start justify-between gap-2">
           <p className="min-w-0 flex-1 line-clamp-2 type-body-regular text-muted">
-            {joining
-              ? "Joining this group…"
-              : invited
-                ? invitePreview
-                : preview || "No messages yet"}
+            {subtitle}
           </p>
-          {hasUnread && (
+          {showBadge && (
             <span
               className="box-border inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--color-warm-charcoal)] px-1 text-[11px] font-semibold leading-none tracking-[-0.195px] text-[var(--color-warm-white)]"
-              aria-label={`${unread} unread`}
+              aria-label={`${badge} unread`}
             >
-              {(unread ?? 0) > 9 ? "9+" : unread}
+              {(badge ?? 0) > 9 ? "9+" : badge}
             </span>
           )}
         </div>

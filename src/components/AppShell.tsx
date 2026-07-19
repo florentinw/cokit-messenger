@@ -3,6 +3,7 @@ import {
   chatStore,
   DEFAULT_GROUP_AVATAR_COLOR,
   displayName,
+  formatChatTime,
   IDENTITY_NAME,
   markChatRead,
   membershipStateFor,
@@ -26,7 +27,7 @@ import {
   type Memberships,
 } from "../lib/co-sdk";
 import { ChatPane } from "./chat/ChatPane";
-import { ChatSidebar, type ChatListEntry } from "./sidebar/ChatSidebar";
+import { ChatSidebar, type ChatListRow } from "./sidebar/ChatSidebar";
 import { GroupDetails } from "./chat-details/GroupDetails";
 import { IdentityLoadingScreen } from "./global/IdentityLoadingScreen";
 import { InviteAcceptPane } from "./chat/InviteAcceptPane";
@@ -132,13 +133,17 @@ export function AppShell() {
     nav,
   });
 
-  const chats: ChatListEntry[] = useMemo(() => {
+  const { inviteRows, chatRows } = useMemo(() => {
     const baseline = createSidebarBaselineRef.current;
     const source =
       creating && baseline
         ? sidebarMemberships.filter((m) => baseline.has(m.id))
         : sidebarMemberships;
-    return source.map((m) => {
+
+    const invites: ChatListRow[] = [];
+    const chats: { row: ChatListRow; timestamp: number }[] = [];
+
+    for (const m of source) {
       const state = membershipStateFor(m, identity);
       const invited = state === MembershipState.Invite;
       const joining =
@@ -148,29 +153,67 @@ export function AppShell() {
         meta?.name && meta.name !== "Group chat" && meta.name !== m.id
           ? meta.name
           : undefined;
-      return {
-        coId: m.id,
-        name:
-          resolvedName ??
-          (invited || joining ? truncateDid(m.id, 22) : (meta?.name ?? "Group chat")),
-        preview: invited || joining ? undefined : meta?.preview,
-        timestamp: invited || joining ? undefined : meta?.timestamp,
-        unread: invited || joining ? 0 : meta?.unread ?? 0,
-        invited,
-        joining,
-        color: meta?.color,
-        inviterName: invited || joining
-          ? meta?.inviterDid
-            ? displayName(meta.inviterDid)
-            : meta?.inviterName
-          : undefined,
-      };
-    });
+      const title =
+        resolvedName ??
+        (invited || joining ? truncateDid(m.id, 22) : (meta?.name ?? "Group chat"));
+      const color = meta?.color;
+      const inviterLabel = meta?.inviterDid
+        ? displayName(meta.inviterDid)
+        : meta?.inviterName;
+
+      if (invited) {
+        invites.push({
+          id: m.id,
+          title,
+          subtitle: inviterLabel
+            ? `${inviterLabel} invited you`
+            : "You’ve been invited to this group",
+          meta: "Invited",
+          color,
+        });
+        continue;
+      }
+
+      if (joining) {
+        chats.push({
+          timestamp: 0,
+          row: {
+            id: m.id,
+            title,
+            subtitle: "Joining this group…",
+            meta: "Joining",
+            color,
+          },
+        });
+        continue;
+      }
+
+      const unread = meta?.unread ?? 0;
+      const timestamp = meta?.timestamp ?? 0;
+      chats.push({
+        timestamp,
+        row: {
+          id: m.id,
+          title,
+          subtitle: meta?.preview || "No messages yet",
+          meta: timestamp ? formatChatTime(timestamp) : undefined,
+          badge: unread > 0 ? unread : undefined,
+          color,
+        },
+      });
+    }
+
+    chats.sort((a, b) => b.timestamp - a.timestamp);
+    return {
+      inviteRows: invites,
+      chatRows: chats.map((c) => c.row),
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sidebarMemberships, identity, chatStoreRevision, creating]);
 
-  const selectedChat = focusedId
-    ? chats.find((c) => c.coId === focusedId)
+  const selectedChatTitle = focusedId
+    ? (chatRows.find((c) => c.id === focusedId)?.title ??
+      inviteRows.find((c) => c.id === focusedId)?.title)
     : undefined;
   const selectedMembershipState = selectedMembership
     ? membershipStateFor(selectedMembership, identity)
@@ -302,7 +345,7 @@ export function AppShell() {
             key={focusedId}
             coId={focusedId}
             identity={identity}
-            fallbackName={selectedChat?.name}
+            fallbackName={selectedChatTitle}
             onOpenDetails={() => setPane({ kind: "details", id: focusedId })}
             onMessagesSeen={onMessagesSeen}
           />
@@ -320,7 +363,8 @@ export function AppShell() {
   return (
     <div className="layer-ground relative flex h-full w-full overflow-hidden">
       <ChatSidebar
-        chats={chats}
+        invites={inviteRows}
+        chats={chatRows}
         selectedId={sidebarSelectedId}
         creating={creating}
         createDraftName={createDraft.name}
