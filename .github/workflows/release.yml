@@ -150,6 +150,9 @@ jobs:
         with:
           tagName: v${{ needs.version.outputs.version }}
           releaseName: CO Messenger v${{ needs.version.outputs.version }}
+          # Same as GitHub's "Generate release notes" (previous tag: Auto).
+          # releaseBody is prepended to the auto-generated What's Changed section.
+          generateReleaseNotes: true
           releaseBody: |
             Nightly macOS (Apple Silicon) build from `main` (ad-hoc signed, **not** notarized).
 
