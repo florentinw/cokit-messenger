@@ -154,17 +154,7 @@ jobs:
           # releaseBody is prepended to the auto-generated What's Changed section.
           generateReleaseNotes: true
           releaseBody: |
-            Nightly macOS (Apple Silicon) build from `main` (ad-hoc signed, **not** notarized).
-
-            ### Install
-            1. Download the `.dmg` and open it.
-            2. Drag **CO Messenger** to Applications.
-            3. If Gatekeeper blocks it: **right-click → Open** → confirm **Open**.
-            4. If that doesn’t show an **Open** option:
-               - Open **System Settings → Privacy & Security**.
-               - Scroll to the message about CO Messenger being blocked.
-               - Click **Open Anyway**, then confirm.
-
-            Network and Keychain are enabled by default in this build.
+            Nightly Apple Silicon build from `main` (ad-hoc signed, **not** notarized).
+            If Gatekeeper blocks it: right-click the app → **Open**, or use **System Settings → Privacy & Security → Open Anyway**.
           releaseDraft: false
           prerelease: true
