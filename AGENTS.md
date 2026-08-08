@@ -2,6 +2,8 @@
 
 Experimental desktop messenger built on [COKIT](https://github.com/1iolabs/cokit) and [Tauri](https://tauri.app). Frontend is React 19 + Vite + Tailwind; the backend is a Rust Tauri app that embeds the CO SDK (peer-to-peer, libp2p-based). See `README.md` for the developer command reference.
 
+To inspect the same stores the app writes to disk (the encrypted CO data under `tmp/data*`), use the COKIT [`co-cli`](https://github.com/1iolabs/cokit/tree/main/co-cli) with `CO_INSTANCE_ID=cokit-messenger` (see `.cursor/skills/co-cli/SKILL.md`). The `CO_INSTANCE_ID`, `CO_BASE_PATH`, and `CO_NO_KEYCHAIN` env vars map to the `co --instance-id/--base-path/--no-keychain` flags; the app's instance id is `cokit-messenger`, so the default `co-cli` instance id would miss its store.
+
 ## Cursor Cloud specific instructions
 
 This repo is macOS-first (CI builds on `macos-latest`; the README references Keychain/macOS icons), but it runs fine on the Linux cloud VM. Platform-specific code (vibrancy, `lsappinfo` display name) is already gated behind `#[cfg(target_os = "macos")]`, so no code changes are needed to build/run on Linux.
