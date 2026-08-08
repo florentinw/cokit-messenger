@@ -86,10 +86,23 @@ export function AppShell() {
   useChatHydration(localSession, sidebarMemberships, identity, selectedIdRef);
   useChatStateMultiplexer(activeIdsRef, selectedIdRef, identityRef);
 
+  // Hydrate the local profile, then ensure Active groups have display_name:<did>.
+  // Covers invitees (accept only reaches Active after handshake), profile saves
+  // made while still Join, and app restarts.
+  const activeCoIdsKey = activeCoIds.join("\n");
   useEffect(() => {
-    if (!localSession) return;
-    void hydrateProfileName(localSession);
-  }, [localSession]);
+    if (!localSession || !identity) return;
+    let cancelled = false;
+    const coIds = activeCoIdsKey ? activeCoIdsKey.split("\n") : [];
+    void (async () => {
+      const name = await hydrateProfileName(localSession);
+      if (cancelled || !name || coIds.length === 0) return;
+      await publishDisplayNameToGroups(identity, name, coIds);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [localSession, identity, activeCoIdsKey]);
 
   const selectedMembership = memberships.find((m) => m.id === focusedId);
   const { selectedMembers, selectedPendingInvites, bumpRoster } = useCoMembers(

@@ -13,7 +13,7 @@ import {
 } from "@/lib/co-sdk/identity";
 import { pushAction } from "@/lib/co-sdk/core";
 import { type GroupAvatarColor } from "@/lib/messenger/group-avatar";
-import { readProfileName } from "@/lib/messenger/profile";
+import { hydrateProfileName, readProfileName } from "@/lib/messenger/profile";
 import {
   nameFromCoTags,
   setCoGroupAvatarColor,
@@ -210,6 +210,47 @@ export async function revokeCoMemberInvite(
   }
 }
 
+/**
+ * Publish `display_name:<did>` once the group CO is writable (Active).
+ * Invite accept leaves membership in Join until the peer handshake finishes;
+ * opening the group CO before Active fails with "No active membership".
+ */
+export async function publishDisplayNameWhenWritable(
+  localSession: string,
+  identity: Did,
+  coId: string,
+): Promise<void> {
+  let name = readProfileName().trim();
+  if (!name) {
+    try {
+      name = (await hydrateProfileName(localSession)).trim();
+    } catch (err) {
+      console.warn("Failed to hydrate profile name before group publish:", err);
+    }
+  }
+  if (!name) return;
+
+  // Handshake → Active is usually quick; keep trying through a short window.
+  const delaysMs = [0, 250, 500, 1000, 2000, 4000, 8000];
+  for (const delay of delaysMs) {
+    if (delay > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+    // Profile may have been saved while we were waiting for Active.
+    const latest = readProfileName().trim() || name;
+    try {
+      const session = await getSharedCoSession(coId);
+      await setCoMemberDisplayName(session, identity, coId, latest);
+      return;
+    } catch (err) {
+      console.warn(
+        `Failed to publish display name to ${coId} (will retry if Active soon):`,
+        err,
+      );
+    }
+  }
+}
+
 export async function acceptInvite(
   localSession: string,
   identity: Did,
@@ -223,6 +264,8 @@ export async function acceptInvite(
     InviteAccept: { id: coId, did: identity },
   };
   await pushAction(localSession, LOCAL_MEMBERSHIP_CORE, action, identity);
+  // Creators publish via joinLocalMembership; invitees must wait until Active.
+  void publishDisplayNameWhenWritable(localSession, identity, coId);
 }
 
 /** Decline a pending group invite (remove self from membership before accepting). */
