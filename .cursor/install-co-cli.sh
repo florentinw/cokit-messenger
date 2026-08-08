@@ -28,9 +28,14 @@ if cargo binstall -V >/dev/null 2>&1; then
 fi
 
 echo "Building co-cli from $COKIT_GIT @ $COKIT_REV (several minutes on first run)…"
+# --locked reuses cokit's committed Cargo.lock. Without it, cargo re-resolves
+# dependencies and fails on transitively-required but yanked crate versions
+# (e.g. core2 0.4.0, pinned by multihash-codetable). Yanked versions are allowed
+# when they are already pinned in a lockfile.
 cargo install co-cli \
   --git "$COKIT_GIT" \
   --rev "$COKIT_REV" \
+  --locked \
   --force
 
 echo "Installed co: $(command -v co)"

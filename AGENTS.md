@@ -2,17 +2,13 @@
 
 Experimental desktop messenger built on [COKIT](https://github.com/1iolabs/cokit) and [Tauri](https://tauri.app). Frontend is React 19 + Vite + Tailwind; the backend is a Rust Tauri app that embeds the CO SDK (peer-to-peer, libp2p-based). See `README.md` for the developer command reference.
 
+To inspect the same encrypted stores the app writes to disk (under `tmp/data*`), use the COKIT [`co-cli`](https://github.com/1iolabs/cokit/tree/main/co-cli) — see `.cursor/skills/co-cli/SKILL.md` for setup and commands.
+
 ## Cursor Cloud specific instructions
 
 This repo is macOS-first (CI builds on `macos-latest`; the README references Keychain/macOS icons), but it runs fine on the Linux cloud VM. Platform-specific code (vibrancy, `lsappinfo` display name) is already gated behind `#[cfg(target_os = "macos")]`, so no code changes are needed to build/run on Linux.
 
-Services / commands (all already documented in `README.md` and `package.json`):
-- Frontend dev server: `pnpm dev` (Vite on port 1420). Tauri starts this automatically via `beforeDevCommand`.
-- Desktop app (single, offline): `pnpm tauri:dev:single` — one window, `CO_DISABLE_NETWORK=true`, data under `tmp/data`.
-- Desktop app (two networked windows): `pnpm tauri:dev` — separate identities for A/B messaging.
-- Typecheck/lint: `pnpm exec tsc --noEmit` (the repo has no separate ESLint script; `tsc` is the type gate). Full build: `pnpm build`.
-- Wipe local CO stores/identities: `pnpm clear:data`.
-- Inspect CO stores (tags, memberships, room): `co` CLI — see skill `.cursor/skills/co-cli/SKILL.md`.
+Run/build commands live in `README.md` and `package.json` (`pnpm dev`, `pnpm tauri:dev`, `pnpm tauri:dev:single`, `pnpm clear:data`). The one non-obvious gate: there is no ESLint script, so `pnpm exec tsc --noEmit` is the typecheck/lint step (full build: `pnpm build`).
 
 ### CO CLI (`co`)
 
@@ -28,18 +24,11 @@ Or paste this into the Cursor Cloud environment **install** command (alongside `
 pnpm install && bash .cursor/install-co-cli.sh
 ```
 
-That matches `.cursor/environment.json`. The script prefers `cargo binstall` when available, otherwise builds `co-cli` from the cokit git rev pinned in `src-tauri/Cargo.toml`.
+That matches `.cursor/environment.json`. The script prefers `cargo binstall` when available, otherwise builds `co-cli` from the cokit rev pinned in `.cursor/install-co-cli.sh` (`COKIT_REV`, kept in sync with the `tauri-plugin-co-sdk` rev in `src-tauri/Cargo.toml`).
 
-Always point `co` at the messenger instance (default `co` instance id is `co-cli` and will miss our store):
+The source build passes `--locked` on purpose: co-cli's transitive `core2 0.4.0` (via `multihash-codetable`) is yanked on crates.io, so a fresh resolve fails; `--locked` reuses cokit's lockfile, where the yanked version is still allowed. The app's own Rust build instead works around the same yank with the `[patch.crates-io]` fork in `src-tauri/Cargo.toml`. Keep both in mind when bumping the cokit rev.
 
-```bash
-export CO_NO_KEYCHAIN=true
-export CO_INSTANCE_ID=cokit-messenger
-export CO_BASE_PATH="$PWD/tmp/data"   # tmp/data-b or tmp/data-c for other instances
-co co show local                      # local CO tags (incl. profile display_name)
-```
-
-Stop `tauri:dev` for that data dir before opening it with `co`.
+For usage — required env, instance ids, data-dir mapping, and common commands — see `.cursor/skills/co-cli/SKILL.md`. Quick start: export `CO_NO_KEYCHAIN=true CO_INSTANCE_ID=cokit-messenger CO_BASE_PATH="$PWD/tmp/data"`, then run e.g. `co co show local`. The app's instance id is `cokit-messenger` (the default `co-cli` would miss its store); stop `tauri:dev` for that data dir before opening it with `co`.
 
 Non-obvious caveats for running on the Linux VM:
 - The GUI needs an X display. A virtual display is available at `DISPLAY=:1`; export it before launching the app.
