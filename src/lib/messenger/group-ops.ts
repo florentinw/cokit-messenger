@@ -13,7 +13,7 @@ import {
 } from "@/lib/co-sdk/identity";
 import { pushAction } from "@/lib/co-sdk/core";
 import { type GroupAvatarColor } from "@/lib/messenger/group-avatar";
-import { hydrateProfileName, readProfileName } from "@/lib/messenger/profile";
+import { readProfileName } from "@/lib/messenger/profile";
 import {
   nameFromCoTags,
   setCoGroupAvatarColor,
@@ -210,32 +210,6 @@ export async function revokeCoMemberInvite(
   }
 }
 
-/** Retry until Join → Active so we can write `display_name:<did>` on the group CO. */
-async function publishDisplayNameWhenWritable(
-  localSession: string,
-  identity: Did,
-  coId: string,
-): Promise<void> {
-  let name = readProfileName().trim();
-  if (!name) name = (await hydrateProfileName(localSession)).trim();
-  if (!name) return;
-
-  const delaysMs = [0, 250, 500, 1000, 2000, 4000, 8000];
-  let lastErr: unknown;
-  for (const delay of delaysMs) {
-    if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
-    const latest = readProfileName().trim() || name;
-    try {
-      const session = await getSharedCoSession(coId);
-      await setCoMemberDisplayName(session, identity, coId, latest);
-      return;
-    } catch (err) {
-      lastErr = err;
-    }
-  }
-  console.warn(`Failed to publish display name to ${coId}`, lastErr);
-}
-
 export async function acceptInvite(
   localSession: string,
   identity: Did,
@@ -249,7 +223,6 @@ export async function acceptInvite(
     InviteAccept: { id: coId, did: identity },
   };
   await pushAction(localSession, LOCAL_MEMBERSHIP_CORE, action, identity);
-  void publishDisplayNameWhenWritable(localSession, identity, coId);
 }
 
 /** Decline a pending group invite (remove self from membership before accepting). */
