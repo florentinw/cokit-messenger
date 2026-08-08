@@ -87,9 +87,17 @@ export function AppShell() {
   useChatStateMultiplexer(activeIdsRef, selectedIdRef, identityRef);
 
   useEffect(() => {
-    if (!localSession) return;
-    void hydrateProfileName(localSession);
-  }, [localSession]);
+    if (!localSession || !identity) return;
+    let cancelled = false;
+    void (async () => {
+      const name = await hydrateProfileName(localSession);
+      if (cancelled || !name || activeCoIds.length === 0) return;
+      await publishDisplayNameToGroups(identity, name, activeCoIds);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [localSession, identity, activeCoIds]);
 
   const selectedMembership = memberships.find((m) => m.id === focusedId);
   const { selectedMembers, selectedPendingInvites, bumpRoster } = useCoMembers(
