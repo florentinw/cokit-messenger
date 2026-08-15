@@ -2,6 +2,8 @@
 
 Experimental desktop messenger built on [COKIT](https://github.com/1iolabs/cokit) and [Tauri](https://tauri.app).
 
+![CO Messenger screenshot](docs/screenshot.webp)
+
 ## Develop
 
 ```bash
